@@ -1,15 +1,18 @@
 'use strict';
 module.exports = {
   up: function(queryInterface, Sequelize) {
-    return queryInterface.createTable('messages', {
+    return queryInterface.createTable('manager_users', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      messages: {
-        type: Sequelize.TEXT
+      user_id: {
+        type: Sequelize.INTEGER
+      },
+      project_id: {
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
@@ -22,6 +25,6 @@ module.exports = {
     });
   },
   down: function(queryInterface, Sequelize) {
-    return queryInterface.dropTable('messages');
+    return queryInterface.dropTable('manager_users');
   }
 };
