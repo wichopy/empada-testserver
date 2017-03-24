@@ -33,10 +33,11 @@ wss.on('connection', (client) => {
 
   client.on('message', function (event) {
     console.log(`I received: ${event}`);
-    models.message.create({ messages: event }).then(() => {
-      console.log("stuck it in the database.")
-      wss.broadcast(event);
-    });
+    models.message.create({ messages: event })
+      .then(() => {
+        console.log("stuck it in the database.")
+        wss.broadcast(event);
+      });
     //insert into messeages
   });
 
