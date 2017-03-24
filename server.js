@@ -2,7 +2,7 @@ const express = require('express');
 const SocketServer = require('ws').Server;
 const WebSocket = require('ws');
 // const sqlize = require('sequelize');
-var models = require("./models");
+const models = require("./models");
 // Set the port to 4000
 const PORT = 3001;
 
@@ -10,7 +10,13 @@ const PORT = 3001;
 const server = express()
   // Make the express server serve static assets (html, javascript, css) from the /public folder
   .use(express.static('public'))
-  .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
+  .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`)
+);
+
+// server.get("/project/:project_id/user/:user_id", (req, res) => {
+//   res.status(200).render("urls_register", templateVars);
+// });
+/////////////////////////////////
 
 // Create the WebSockets server
 //**Need to do server: app to use express. */
