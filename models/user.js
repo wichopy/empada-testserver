@@ -13,7 +13,6 @@ module.exports = function(sequelize, DataTypes) {
         user.hasMany(models.manager_user)
       },
       timestamps: true
-
     }
   });
   return user;

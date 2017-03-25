@@ -11,7 +11,8 @@ module.exports = function(sequelize, DataTypes) {
         project.hasMany(models.assigned_user)
         project.hasMany(models.manager_user)
         project.hasMany(models.task)
-      }
+      },
+      timestamps: true
     }
   });
   return project;

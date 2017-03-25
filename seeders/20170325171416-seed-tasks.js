@@ -14,10 +14,13 @@ module.exports = {
     */
     return queryInterface.bulkInsert('tasks', [{
         name: 'photographing',
-        description: 'Take photos of the couple.', 
-        start_time: new Date(), 
+        description: 'Take photos of the couple.',
+        project_id: 12,
+        assigned_start_time: new Date(),
+        assigned_end_time: new Date(),
+        start_time: new Date(),
         end_date: new Date(),
-        createdAt: new Date(), 
+        createdAt: new Date(),
         updatedAt: new Date()
       }], {});
   },

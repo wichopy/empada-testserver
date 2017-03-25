@@ -14,7 +14,9 @@ module.exports = {
     */
     return queryInterface.bulkInsert('projects', [{
       name: 'Wedding',
-      description: 'A wedding for the beautiful couple.', 
+      description: 'A wedding for the beautiful couple.',
+      start_date: new Date(),
+      end_date: new Date(),
       createdAt: new Date(), 
       updatedAt: new Date()
     }], {});

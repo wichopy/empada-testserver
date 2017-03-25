@@ -16,7 +16,7 @@ const server = express()
 // server.get("/project/:project_id/user/:user_id", (req, res) => {
 //   res.status(200).render("urls_register", templateVars);
 // });
-/////////////////////////////////
+
 
 // Create the WebSockets server
 //**Need to do server: app to use express. */
@@ -36,13 +36,41 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
 
-
   client.on('message', function (event) {
-    console.log(`I received: ${event}`);
-    models.task.create({ task_name: event }).then(() => {
-      console.log("stuck it in the database.")
-      wss.broadcast(event);
-    });
+    wss.clients.forEach(function each(client) {
+      let receivedMessage = JSON.parse(event);
+      console.log('before switch')
+      switch (receivedMessage.type) {
+        case 'start-time':
+        console.log(receivedMessage)
+        console.log(receivedMessage.start_time)
+        console.log(receivedMessage.project_id)
+        console.log(receivedMessage.id)
+          models.task.update({
+            start_time: receivedMessage.start_time
+            }, {
+              where: {
+                project_id: receivedMessage.project_id,
+                id: receivedMessage.id
+                }
+              }).then((res) => {
+                console.log(res);
+              })
+          // models.tasks.findOne({ where: { project_id: receivedMessage.project_id, id: receivedMessage.id }})
+          //   .on('success', (message) => {
+          //     if (message) {
+          //       models.task.updateAttributes({
+          //         start_time: receivedMessage.start_time
+          //       })
+          //       .success(() => {})
+          //     }
+          //   })
+        break;
+
+        default:
+          console.error('Failed to send back');
+      }
+    
     //insert into messeages
   });
 
@@ -50,4 +78,5 @@ wss.on('connection', (client) => {
   client.on('close', (event) => {
     console.log('Client disconnected')
   });
+});
 });
