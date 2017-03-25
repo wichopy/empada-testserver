@@ -9,7 +9,8 @@ module.exports = function(sequelize, DataTypes) {
         // associations can be defined here
         manager_user.belongsTo(models.user)
         manager_user.belongsTo(models.project)
-      }
+      },
+      timestamps: true
     }
   });
   return manager_user;

@@ -11,7 +11,8 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         // associations can be defined here
         task.belongsTo(models.project)
-      }
+      }, 
+      timestamps: true
     }
   });
   return task;

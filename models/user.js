@@ -11,7 +11,9 @@ module.exports = function(sequelize, DataTypes) {
         // associations can be defined here
         user.hasMany(models.assigned_user)
         user.hasMany(models.manager_user)
-      }
+      },
+      timestamps: true
+
     }
   });
   return user;

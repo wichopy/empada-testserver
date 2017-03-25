@@ -10,14 +10,16 @@ module.exports = {
       return queryInterface.bulkInsert('Person', [{
         name: 'John Doe',
         isBetaMember: false
-      }], {});\c 
+      }], {});
     */
-    return queryInterface.bulkInsert('projects', [{
-      name: 'Wedding',
-      description: 'A wedding for the beautiful couple.', 
-      createdAt: new Date(), 
-      updatedAt: new Date()
-    }], {});
+    return queryInterface.bulkInsert('tasks', [{
+        name: 'photographing',
+        description: 'Take photos of the couple.', 
+        start_time: new Date(), 
+        end_date: new Date(),
+        createdAt: new Date(), 
+        updatedAt: new Date()
+      }], {});
   },
 
   down: function (queryInterface, Sequelize) {
@@ -28,6 +30,6 @@ module.exports = {
       Example:
       return queryInterface.bulkDelete('Person', null, {});
     */
-    return queryInterface.bulkDelete('projects', null, {});
+    return queryInterface.bulkDelete('tasks', null, {});
   }
 };
