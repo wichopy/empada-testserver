@@ -36,47 +36,55 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
 
-  client.on('message', function (event) {
-    wss.clients.forEach(function each(client) {
-      let receivedMessage = JSON.parse(event);
-      console.log('before switch')
-      switch (receivedMessage.type) {
-        case 'start-time':
-        console.log(receivedMessage)
-        console.log(receivedMessage.start_time)
-        console.log(receivedMessage.project_id)
-        console.log(receivedMessage.id)
-          models.task.update({
-            start_time: receivedMessage.start_time
-            }, {
-              where: {
-                project_id: receivedMessage.project_id,
-                id: receivedMessage.id
-                }
-              }).then((res) => {
-                console.log(res);
-              })
-          // models.tasks.findOne({ where: { project_id: receivedMessage.project_id, id: receivedMessage.id }})
-          //   .on('success', (message) => {
-          //     if (message) {
-          //       models.task.updateAttributes({
-          //         start_time: receivedMessage.start_time
-          //       })
-          //       .success(() => {})
-          //     }
-          //   })
-        break;
-
-        default:
-          console.error('Failed to send back');
-      }
-    
-    //insert into messeages
-  });
+  client.on('message', handleMessage)
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
     console.log('Client disconnected')
   });
 });
-});
+
+function handleMessage(event) {
+  wss.clients.forEach(function (client) {
+    let receivedMessage = JSON.parse(event);
+    console.log('before switch')
+    switch (receivedMessage.type) {
+      case 'start-time-for-contractor-tasks':
+        startTimeForContractorTasks(receivedMessage);
+      break;
+
+      case 'end-time-for-contractor-tasks':
+        endTimeForContractorTasks(receivedMessage);
+      break;
+
+      default:
+        console.error('Failed to send back');
+    }
+  })
+}
+
+function startTimeForContractorTasks(receivedMessage) {
+  models.task.update({
+    start_time: receivedMessage.start_time
+    }, {
+      where: {
+        project_id: receivedMessage.project_id,
+        id: receivedMessage.id
+        }
+      }).then((res) => {
+        console.log(res);
+      })
+}
+
+function endTimeForContractorTasks(receivedMessage) {
+  models.task.update({
+    end_date: receivedMessage.end_date
+    }, {
+      where: {
+        project_id: receivedMessage.project_id,
+        id: receivedMessage.id
+        }
+      }).then((res) => {
+        console.log(res);
+      })
+}
