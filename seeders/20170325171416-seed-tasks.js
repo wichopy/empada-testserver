@@ -22,6 +22,17 @@ module.exports = {
         end_date: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
+      }, 
+      {
+        name: 'catering',
+        description: 'Provide food.',
+        project_id: 12,
+        assigned_start_time: new Date(),
+        assigned_end_time: new Date(),
+        start_time: new Date(),
+        end_date: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
       }], {});
   },
 

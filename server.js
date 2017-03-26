@@ -60,6 +60,14 @@ function handleMessage(event) {
       default:
         console.error('Failed to send back');
     }
+    // switch (receivedMessage.type2) {
+    //   case 'begin-task-button-disabled':
+    //     disableEndTaskButton(receivedMessage) 
+    //   break;
+      
+    //   default:
+    //     console.error('Failed to send back');
+    // }
   })
 }
 
@@ -88,3 +96,9 @@ function endTimeForContractorTasks(receivedMessage) {
         console.log(res);
       })
 }
+
+// function disableEndTaskButton(receivedMessage) {
+//   if (project_id == receivedMessage.project_id && id == receivedMessage.id) {
+    
+//   }
+// }
