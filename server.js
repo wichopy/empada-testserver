@@ -30,18 +30,35 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
 
-
-  client.on('message', function (event) {
-    console.log(`I received: ${event}`);
-    models.task.create({ task_name: event }).then(() => {
-      console.log("stuck it in the database.")
-      wss.broadcast(event);
-    });
-    //insert into messeages
-  });
+  client.on('message', handleMessage);
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
     console.log('Client disconnected')
   });
 });
+
+function handleMessage(data){
+  data = JSON.parse(data)
+  switch(data.type){
+    case 'login':
+      login(data)
+      break;
+    case 'register':
+      register(data)
+    default:
+      throw new Error("Unknown event type " + data.type)
+  } 
+}
+
+function login(data){
+  models.user.findAll().then((users) => {
+    console.log(users)
+  })
+}
+
+function register(data){
+  models.user.findAll().then((users) => {
+    console.log(users)
+  })
+}
