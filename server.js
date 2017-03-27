@@ -30,7 +30,16 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
 
-  client.on('message', handleMessage);
+  client.on('message', (data) => {
+    data = JSON.parse(data)
+    switch(data.type){
+      case 'auth0-login':
+        login(data)       
+        break;
+      default:
+        throw new Error("Unknown event type " + data.type)
+    } 
+  });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
@@ -38,27 +47,24 @@ wss.on('connection', (client) => {
   });
 });
 
-function handleMessage(data){
-  data = JSON.parse(data)
-  switch(data.type){
-    case 'login':
-      login(data)
-      break;
-    case 'register':
-      register(data)
-    default:
-      throw new Error("Unknown event type " + data.type)
-  } 
-}
-
-function login(data){
-  models.user.findAll().then((users) => {
-    console.log(users)
+login = (data, client) => {
+  models.user.count({where: {email: data.email}}).then((count) => {
+    if(count > 0){
+      console.log('user exists');
+    }else{
+      models.user.create({first_name: data.first_name, last_name: data.last_name, email: data.email})
+    }
   })
 }
 
-function register(data){
-  models.user.findAll().then((users) => {
-    console.log(users)
-  })
-}
+// register = (data, client) => {
+//   models.user.findAndCountAll({where: {email: data.email}, limit: 1}).then((result) => {
+//     if(result.count > 0){
+//       console.log('user already exists')
+//     }else{
+//       models.user.create({first_name: data.first_name, last_name: data.last_name, email: data.email, password: data.password})
+//       console.log('user created');
+//     }
+//   })
+//   // console.log('email' + data.email)
+// }
