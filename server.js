@@ -33,12 +33,27 @@ wss.on('connection', (client) => {
 
   client.on('message', function (event) {
     console.log(`I received: ${event}`);
-    models.task.create({ task_name: event }).then(() => {
-      console.log("stuck it in the database.")
-      wss.broadcast(event);
-    });
-    //insert into messeages
+    var newMessage = JSON.parse(event);
+    switch (newMessage.type) {
+      case "eventCreation-addNewAssignedPerson":
+        eventCreation_addNewAssignedPerson(newMessage.data)
+        break;
+      default:
+        break;
+    };
   });
+  //Functions for switch case:
+  eventCreation_addNewAssignedPerson = (data) => {
+      models.user.create({
+        first_name: data.name,
+        email: data.email
+      }).then(() => {
+        console.log(`Add ${data.name} to users`);
+        wss.broadcast(`Add ${data.name} to users`);
+      });
+    }
+    //insert into messeages
+
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
