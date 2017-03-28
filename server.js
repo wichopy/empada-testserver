@@ -68,11 +68,18 @@ wss.on('connection', (client) => {
 });
 eventCreation_newProject = (data) => {
   console.log(data);
-  models.project.create({
+  var add_event = []
+  var add_project = models.project.create({
     name: data.name,
     start_date: data.date,
     description: data.description
-  }).then(() => { console.log("Inserted!"); }).catch()
+  }).then(() => { console.log("Inserted project."); }).catch();
+  var add_users = [];
+  data.assigned_people.map((p) => {
+    var new_user = models.user.create({}).then(() => { console.log("Inserted user "); });
+    add_users.push(new_user);
+  });
+  Promise.all(add_event.concat(add_project, add_users)).then(() => { console.log('Add all to database!'); });
 }
 
 login = (data, client) => {
