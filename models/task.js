@@ -4,8 +4,10 @@ module.exports = function(sequelize, DataTypes) {
     project_id: DataTypes.INTEGER,
     task_name: DataTypes.STRING,
     task_description: DataTypes.STRING,
-    start_time: DataTypes.DATE,
-    end_date: DataTypes.DATE
+    start_date: DataTypes.DATE,
+    end_date: DataTypes.DATE,
+    assigned_start_date: DataTypes.DATE,
+    assigned_end_date: DataTypes.DATE
   }, {
     classMethods: {
       associate: function(models) {

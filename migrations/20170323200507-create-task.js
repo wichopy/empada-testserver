@@ -17,10 +17,16 @@ module.exports = {
       task_description: {
         type: Sequelize.STRING
       },
-      start_time: {
+      start_date: {
         type: Sequelize.DATE
       },
       end_date: {
+        type: Sequelize.DATE
+      },
+      assigned_start_date: {
+        type: Sequelize.DATE
+      },
+      assigned_end_date: {
         type: Sequelize.DATE
       },
       createdAt: {
