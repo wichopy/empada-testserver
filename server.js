@@ -4,7 +4,7 @@ const WebSocket = require('ws');
 // const sqlize = require('sequelize');
 var models = require("./models");
 // Set the port to 4000
-const PORT = 3001;
+const PORT = 4000;
 
 // Create a new express server
 const server = express()
@@ -29,33 +29,57 @@ wss.broadcast = function broadcast(data) {
 
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
+  wss.broadcast("New client connected!")
 
-
-  client.on('message', function (event) {
+  client.on('message', (event) => {
     console.log(`I received: ${event}`);
     var newMessage = JSON.parse(event);
     switch (newMessage.type) {
       case "eventCreation-addNewAssignedPerson":
         eventCreation_addNewAssignedPerson(newMessage.data)
         break;
+      case "eventCreation-newProject":
+        eventCreation_newProject(newMessage.data);
+        break;
       default:
         break;
     };
   });
   //Functions for switch case:
+  {
+    "eventCreation": {
+      "selected": { "name": "Sally", "id": "3" },
+      "date": "1997-12-03",
+      "name": "Wedding",
+      "description": "sadfsaf",
+      "newTask": "",
+      "newDescription": "",
+      "newStartTime": "",
+      "newEndTime": "",
+      "newAssignedPerson": "",
+      "newAssignedEmail": "",
+      "assigned_people": [{ "name": "Jimmy", "id": 1, "email": "jimmy@email.com" }, { "name": "Johnny", "id": 2, "email": "Johnny@email.com" }, { "name": "Sally", "id": 3, "email": "sally@email.com" }, { "name": "asfd", "id": 4, "email": "sdfsaf" }],
+      "tasks": [{ "id": 1, "user_id": "3", "name": "asdf", "description": "sf", "assigned_start_time": "12:03", "assigned_end_time": "17:00" }],
+      "timelineData": [
+        ["Sally", "2017-03-27T12:03:00.000Z", "2017-03-27T17:00:00.000Z"]
+      ]
+    },
+    "type": "eventCreation-newProject"
+  }
+
+  eventCreation_newProject = (data) => {
+    models.project.create({ name: data.name })
+  }
   eventCreation_addNewAssignedPerson = (data) => {
       models.user.create({
         first_name: data.name,
         email: data.email
       }).then(() => {
         console.log(`Add ${data.name} to users`);
-        wss.broadcast(`Add ${data.name} to users`);
+        wss.broadcast(JSON.stringify(data.name));
       });
     }
-    //insert into messeages
-
-
-  // Set up a callback for when a client closes the socket. This usually means they closed their browser.
+    // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
     console.log('Client disconnected')
   });
