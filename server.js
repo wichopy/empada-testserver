@@ -36,7 +36,32 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
 
-  client.on('message', handleMessage)
+  client.on('message', (data) => {
+    let receivedMessage = JSON.parse(data);
+    console.log('before switch')
+    switch (receivedMessage.type) {
+      case 'start-time-for-contractor-tasks':
+        startTimeForContractorTasks(receivedMessage);
+      break;
+
+      case 'end-time-for-contractor-tasks-and-updating-progress-bar':
+        console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
+        endTimeForContractorTasks(receivedMessage);
+        let message = {
+          type: 'update-progress-bar',
+          progress_bar: receivedMessage.progress_bar
+        }
+        client.send(JSON.stringify(message));
+      break;
+
+      case 'add-contractor-to-progress-bar':
+        addContractorToProgressBar(receivedMessage);
+      break;
+
+      default:
+        console.error('Failed to send back');
+    }
+  })
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   client.on('close', (event) => {
@@ -44,32 +69,6 @@ wss.on('connection', (client) => {
   });
 });
 
-function handleMessage(event) {
-  wss.clients.forEach(function (client) {
-    let receivedMessage = JSON.parse(event);
-    console.log('before switch')
-    switch (receivedMessage.type) {
-      case 'start-time-for-contractor-tasks':
-        startTimeForContractorTasks(receivedMessage);
-      break;
-
-      case 'end-time-for-contractor-tasks':
-        endTimeForContractorTasks(receivedMessage);
-      break;
-
-      default:
-        console.error('Failed to send back');
-    }
-    // switch (receivedMessage.type2) {
-    //   case 'begin-task-button-disabled':
-    //     disableEndTaskButton(receivedMessage) 
-    //   break;
-      
-    //   default:
-    //     console.error('Failed to send back');
-    // }
-  })
-}
 
 function startTimeForContractorTasks(receivedMessage) {
   models.task.update({
@@ -85,8 +84,9 @@ function startTimeForContractorTasks(receivedMessage) {
 }
 
 function endTimeForContractorTasks(receivedMessage) {
+  console.log('endTimeForContractorTasks');
   models.task.update({
-    end_date: receivedMessage.end_date
+    end_time: receivedMessage.end_time
     }, {
       where: {
         project_id: receivedMessage.project_id,
@@ -97,8 +97,13 @@ function endTimeForContractorTasks(receivedMessage) {
       })
 }
 
-// function disableEndTaskButton(receivedMessage) {
-//   if (project_id == receivedMessage.project_id && id == receivedMessage.id) {
-    
+// function addContractorToProgressBar(receivedMessage) {
+//   let message = {
+//     type: receivedMessage.type,
+//     name: receivedMessage.name, 
+//     completed_tasks: receivedMessage.completed_tasks, 
+//     incomplete_tasks: receivedMessage.incomplete_tasks
 //   }
+//   client.send(JSON.stringify(message));
+//   break; 
 // }
