@@ -68,18 +68,35 @@ wss.on('connection', (client) => {
 });
 eventCreation_newProject = (data) => {
   console.log(data);
-  var add_event = []
-  var add_project = models.project.create({
-    name: data.name,
-    start_date: data.date,
-    description: data.description
-  }).then(() => { console.log("Inserted project."); }).catch();
-  var add_users = [];
-  data.assigned_people.map((p) => {
-    var new_user = models.user.create({}).then(() => { console.log("Inserted user "); });
-    add_users.push(new_user);
+
+  var add_users = data.assigned_people.map((p) => {
+    // var new_user = models.user.create({}).then(() => { console.log("Inserted user "); });
+    // add_users.push(new_user);
+    return { first_name: p.name, email: p.email };
   });
-  Promise.all(add_event.concat(add_project, add_users)).then(() => { console.log('Add all to database!'); });
+  models.user.bulkCreate(add_users).then(() => {
+    console.log('add all users');
+  }).then(() => {
+    var add_tasks = data.tasks.map((t) => {
+      return {
+        assigned_start_time: t.assigned_start_time,
+        assigned_end_time: t.assigned_end_time,
+        name: t.name,
+        description: t.description,
+      };
+    });
+    return models.task.bulkCreate(add_tasks).then(() => {
+      console.log('added tasks');
+    });
+  }).then(() => {
+    return models.project.create({
+      name: data.name,
+      start_date: data.date,
+      description: data.description
+    }).then(() => {
+      console.log("Inserted project.");
+    }).catch((err) => { console.error(err); });
+  });
 }
 
 login = (data, client) => {
