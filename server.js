@@ -50,8 +50,8 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-
-clientConnected = () => {
+models.sequelize.sync().then(() => {
+  clientConnected = () => {
   models.task.findAll({
     attributes: [
       'task_name',
@@ -66,7 +66,6 @@ clientConnected = () => {
     wss.broadcast({type:'tasks', data: data});
   })
 }
-
 
 // Set up a callback that will run when a client connects to the server
 // When a client connects they are assigned a socket, represented by
@@ -124,3 +123,4 @@ login = (data, client) => {
 //   })
 //   // console.log('email' + data.email)
 // }
+})
