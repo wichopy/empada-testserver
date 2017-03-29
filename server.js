@@ -13,11 +13,6 @@ const server = express()
   .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`)
 );
 
-// server.get("/project/:project_id/user/:user_id", (req, res) => {
-//   res.status(200).render("urls_register", templateVars);
-// });
-
-
 // Create the WebSockets server
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
@@ -47,11 +42,7 @@ wss.on('connection', (client) => {
       case 'end-time-for-contractor-tasks-and-updating-progress-bar':
         console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
         endTimeForContractorTasks(receivedMessage);
-        let message = {
-          type: 'update-progress-bar',
-          progress_bar: receivedMessage.progress_bar
-        }
-        client.send(JSON.stringify(message));
+        sendDonutGraphInfo(receivedMessage);
       break;
 
       case 'add-contractor-to-progress-bar':
@@ -97,13 +88,10 @@ function endTimeForContractorTasks(receivedMessage) {
       })
 }
 
-// function addContractorToProgressBar(receivedMessage) {
-//   let message = {
-//     type: receivedMessage.type,
-//     name: receivedMessage.name, 
-//     completed_tasks: receivedMessage.completed_tasks, 
-//     incomplete_tasks: receivedMessage.incomplete_tasks
-//   }
-//   client.send(JSON.stringify(message));
-//   break; 
-// }
+function sendDonutGraphInfo(receivedMessage) {
+  let message = {
+    type: 'update-progress-bar',
+    progress_bar: receivedMessage.progress_bar
+  }
+  client.send(JSON.stringify(message));
+}
