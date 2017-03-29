@@ -47,14 +47,13 @@ wss.on('connection', (client) => {
 
   client.on('message', (data) => {
     data = JSON.parse(data)
-    console.log(data);
-    // wss.broadcast(event);
+      // wss.broadcast(event);
     switch (data.type) {
       case 'auth0-login':
         login(data)
         break;
       case "eventCreation-newProject":
-        eventCreation_newProject(data.eventCreation);
+        eventCreation_newProject(data.eventCreation).then(console.log("finished adding project!!"));
         break;
       default:
         throw new Error("Unknown event type " + data.type)
@@ -66,44 +65,28 @@ wss.on('connection', (client) => {
     console.log('Client disconnected')
   });
 });
-eventCreation_newProject = (data) => {
-  console.log(data);
-
+async function eventCreation_newProject(data) {
   var add_users = data.assigned_people.map((p) => {
-    // var new_user = models.user.create({}).then(() => { console.log("Inserted user "); });
-    // add_users.push(new_user);
     return { first_name: p.name, email: p.email };
   });
-  models.user.bulkCreate(add_users).then(() => {
-    console.log('add all users');
-  }).then(() => {
-    var add_tasks = data.tasks.map((t) => {
-      return {
-        assigned_start_time: new Date(`${data.date}T${t.assigned_start_time}`),
-        assigned_end_time: new Date(`${data.date}T${t.assigned_end_time}`),
-        name: t.name,
-        description: t.description,
-      };
-    });
-    console.log(add_users);
-    console.log(add_tasks);
-    return models.task.bulkCreate(add_tasks).then(() => {
-      console.log('added tasks');
-    });
-  }).then(() => {
-    console.log(data);
-    return models.project.create({
-      name: data.name,
-      start_date: new Date(data.date),
-      end_date: new Date(data.date),
-      description: data.description
-    }).then(() => {
-      console.log("Inserted project.");
-    })
-  }).then(() => {
-    console.log(models.tasks.findAll());
-  }).catch((err) => { console.error(err); });
+  var add_tasks = data.tasks.map((t) => {
+    return {
+      assigned_start_time: new Date(`${data.date}T${t.assigned_start_time}`),
+      assigned_end_time: new Date(`${data.date}T${t.assigned_end_time}`),
+      name: t.name,
+      description: t.description,
+    };
+  });
+  await models.user.bulkCreate(add_users).then(console.log('finished inserting users')).then(console.log('next insert tasks'));
+  await models.task.bulkCreate(add_tasks).then(console.log('finished inserting tasks')).then(console.log('next insert project'));
+  await models.project.create({
+    name: data.name,
+    start_date: new Date(data.date),
+    end_date: new Date(data.date),
+    description: data.description
+  }).then(console.log('finished inserting project')).then(console.log('done with eventCreation function.'));
 }
+
 login = (data, client) => {
   models.user.count({ where: { email: data.email } }).then((count) => {
     if (count > 0) {
