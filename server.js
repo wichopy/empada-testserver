@@ -50,7 +50,7 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync().then(() => {
+models.sequelize.sync({force: true}).then(() => {
   clientConnected = () => {
   models.task.findAll({
     attributes: [
