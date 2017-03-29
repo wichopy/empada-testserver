@@ -12,7 +12,8 @@ module.exports = function(sequelize, DataTypes) {
         // project.hasMany(models.manager_user)
         project.belongsTo(models.user)
         project.hasMany(models.task)
-      }
+      },
+      timestamps: true
     }
   });
   return project;

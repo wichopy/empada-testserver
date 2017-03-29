@@ -1,5 +1,5 @@
 'use strict';
-module.exports = function(sequelize, DataTypes) {
+module.exports = function (sequelize, DataTypes) {
   var task = sequelize.define('task', {
     // project_id: DataTypes.INTEGER,
     // user_id: DataTypes.INTEGER
@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
     assigned_end_time: DataTypes.DATE
   }, {
     classMethods: {
-      associate: function(models) {
+      associate: function (models) {
         // associations can be defined here
         task.belongsTo(models.project)
         task.belongsTo(models.user)
