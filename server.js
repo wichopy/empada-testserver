@@ -79,26 +79,31 @@ eventCreation_newProject = (data) => {
   }).then(() => {
     var add_tasks = data.tasks.map((t) => {
       return {
-        assigned_start_time: t.assigned_start_time,
-        assigned_end_time: t.assigned_end_time,
+        assigned_start_time: new Date(`${data.date}T${t.assigned_start_time}`),
+        assigned_end_time: new Date(`${data.date}T${t.assigned_end_time}`),
         name: t.name,
         description: t.description,
       };
     });
+    console.log(add_users);
+    console.log(add_tasks);
     return models.task.bulkCreate(add_tasks).then(() => {
       console.log('added tasks');
     });
   }).then(() => {
+    console.log(data);
     return models.project.create({
       name: data.name,
-      start_date: data.date,
+      start_date: new Date(data.date),
+      end_date: new Date(data.date),
       description: data.description
     }).then(() => {
       console.log("Inserted project.");
-    }).catch((err) => { console.error(err); });
-  });
+    })
+  }).then(() => {
+    console.log(models.tasks.findAll());
+  }).catch((err) => { console.error(err); });
 }
-
 login = (data, client) => {
   models.user.count({ where: { email: data.email } }).then((count) => {
     if (count > 0) {

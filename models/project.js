@@ -1,12 +1,13 @@
 'use strict';
-module.exports = function(sequelize, DataTypes) {
+module.exports = function (sequelize, DataTypes) {
   var project = sequelize.define('project', {
     name: DataTypes.STRING,
     start_date: DataTypes.DATE,
-    end_date: DataTypes.DATE
+    end_date: DataTypes.DATE,
+    description: DataTypes.STRING
   }, {
     classMethods: {
-      associate: function(models) {
+      associate: function (models) {
         // associations can be defined here
         project.hasMany(models.assigned_user)
         project.hasMany(models.manager_user)
