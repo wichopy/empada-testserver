@@ -54,11 +54,11 @@ models.sequelize.sync({ force: true }).then(() => {
   clientConnected = () => {
     models.task.findAll({
         attributes: [
-          'task_name',
-          'start_date',
-          'end_date',
-          'assigned_start_date',
-          'assigned_end_date'
+          'name',
+          'start_time',
+          'end_time',
+          'assigned_start_time',
+          'assigned_end_time'
         ]
       })
       .then((data) => {
@@ -91,17 +91,25 @@ models.sequelize.sync({ force: true }).then(() => {
         case 'auth0-login':
           login(data)
           break;
+
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           break;
+
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
           endTimeForContractorTasks(data);
-          sendDonutGraphInfo(data);
+          sendDonutGraphInfo(data, client);
           break;
+
         case 'add-contractor-to-progress-bar':
           addContractorToProgressBar(data);
           break;
+
+        case 'request-tasks':
+          getTasks(data, client);
+          break;
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
@@ -122,39 +130,49 @@ models.sequelize.sync({ force: true }).then(() => {
     })
   }
 
-  function startTimeForContractorTasks(receivedMessage) {
+  startTimeForContractorTasks = (data) => {
     models.task.update({
-      start_time: receivedMessage.start_time
+      start_time: data.start_time
     }, {
       where: {
-        project_id: receivedMessage.project_id,
-        id: receivedMessage.id
+        projectId: data.project_id,
+        id: data.id
       }
     }).then((res) => {
       console.log(res);
     })
   }
 
-  function endTimeForContractorTasks(receivedMessage) {
+  endTimeForContractorTasks = (data) => {
     console.log('endTimeForContractorTasks');
     models.task.update({
-      end_time: receivedMessage.end_time
+      end_time: data.end_time
     }, {
       where: {
-        project_id: receivedMessage.project_id,
-        id: receivedMessage.id
+        projectId: data.project_id,
+        id: data.id
       }
     }).then((res) => {
       console.log(res);
     })
   }
 
-  function sendDonutGraphInfo(receivedMessage) {
+  sendDonutGraphInfo = (data, client) => {
     let message = {
       type: 'update-progress-bar',
-      progress_bar: receivedMessage.progress_bar
+      progress_bar: data.progress_bar
     }
     client.send(JSON.stringify(message));
-  }
+    }
+  })
 
-})
+  getTasks = (data, client) => {
+    console.log('entered getTasks');
+    models.tasks.findAll({
+      attributes: [ userId ]
+    // }).models.users.findAll({
+
+    }).then((res) => {
+      console.log(res);
+    })
+  }
