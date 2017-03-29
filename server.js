@@ -30,7 +30,11 @@ const wss = new SocketServer({ server });
 //       wss.broadcast({ type: 'tasks', data: data });
 //     })
 // }
+console.log('wait for db model sync');
 
+models.sequelize.sync({ force: true })
+
+console.log('db now synced with models.')
 wss.broadcast = (data) => {
   wss.clients.forEach(function each(client) {
     if (client.readyState === client.OPEN) {
@@ -90,6 +94,7 @@ async function eventCreation_newProject(data) {
   console.log('between task create and project create')
   await models.project.create(add_project)
   console.log('done all inserts')
+  await models.task
 }
 
 login = (data, client) => {
