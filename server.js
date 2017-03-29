@@ -53,7 +53,8 @@ wss.on('connection', (client) => {
         login(data)
         break;
       case "eventCreation-newProject":
-        eventCreation_newProject(data.eventCreation).then(console.log("finished adding project!!"));
+        eventCreation_newProject(data.eventCreation)
+        console.log("finished adding project!!")
         break;
       default:
         throw new Error("Unknown event type " + data.type)
@@ -77,14 +78,18 @@ async function eventCreation_newProject(data) {
       description: t.description,
     };
   });
-  await models.user.bulkCreate(add_users).then(console.log('finished inserting users')).then(console.log('next insert tasks'));
-  await models.task.bulkCreate(add_tasks).then(console.log('finished inserting tasks')).then(console.log('next insert project'));
-  await models.project.create({
+  var add_project = {
     name: data.name,
     start_date: new Date(data.date),
     end_date: new Date(data.date),
     description: data.description
-  }).then(console.log('finished inserting project')).then(console.log('done with eventCreation function.'));
+  };
+  await models.user.bulkCreate(add_users)
+  console.log('between user create and task create')
+  await models.task.bulkCreate(add_tasks)
+  console.log('between task create and project create')
+  await models.project.create(add_project)
+  console.log('done all inserts')
 }
 
 login = (data, client) => {
