@@ -52,15 +52,17 @@ const wss = new SocketServer({ server });
 
 models.sequelize.sync({ force: true }).then(() => {
   clientConnected = () => {
-    models.task.findAll({
-        attributes: [
-          'task_name',
-          'start_date',
-          'end_date',
-          'assigned_start_date',
-          'assigned_end_date'
-        ]
-      })
+    models.task.findAll(
+        // {
+        // attributes: [
+        //   'name',
+        //   'start_date',
+        //   'end_date',
+        //   'assigned_start_date',
+        //   'assigned_end_date'
+        // ]
+        // }
+      )
       .then((data) => {
         console.log("queried tasks from server when client connected");
         wss.broadcast({ type: 'tasks', data: data });
