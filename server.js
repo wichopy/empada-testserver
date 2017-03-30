@@ -44,160 +44,7 @@ wss.broadcast = (data) => {
     }
   });
 };
-const data = {
-  eventCreation: {
-    selected: { name: 'Johnny', id: '2' },
-    startDate: '2017-12-12',
-    endDate: '2017-12-12',
-    name: 'Hello',
-    description: 'Yes',
-    newTask: '',
-    newDescription: '',
-    newStartTime: '',
-    newEndTime: '',
-    newAssignedPerson: '',
-    newAssignedEmail: '',
-    assigned_people: [
-      { email: "will@lhl.com", id: 1, name: 'will' },
-      { email: "bran@lhl.com", id: 1, name: 'bran' },
-      { email: "bern@lhl.com", id: 1, name: 'bern' },
-      { email: "ammar@lhl.com", id: 1, name: 'ammar' },
-    ],
-    tasks: [{
-        assigned_start_time: "15:00",
-        assigned_end_time: "17:00",
-        descrption: "i love you",
-        id: 1,
-        name: 'the best name',
-        user_id: 1
-      },
-      {
-        assigned_start_time: "01:00",
-        assigned_end_time: "05:00",
-        descrption: "task 2",
-        id: 2,
-        name: 'the task number two',
-        user_id: 2
-      },
-    ],
-    timelineData: [
-      [Object],
-      [Object]
-    ]
-  },
-  tasks: [],
-  modalIsOpen: false,
-  grace_period: 300000,
-  newsfeed: [{
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    },
-    {
-      type: 'li',
-      key: null,
-      ref: null,
-      props: [Object],
-      _owner: null,
-      _store: {}
-    }
-  ],
-  list_of_tasks: [{
-      start_time: 1490893623563,
-      assigned_start_time: '1:07:03 PM',
-      description: 'description',
-      assigned_end_time: '1:07:03 PM',
-      end_time: 1490893623564,
-      id: 1,
-      user_id: 1
-    },
-    {
-      start_time: 1490893623564,
-      assigned_start_time: '1:07:03 PM',
-      description: 'another description',
-      assigned_end_time: '1:07:03 PM',
-      end_time: 1490893623564,
-      id: 2,
-      user_id: 1
-    },
-    {
-      start_time: 1490893623564,
-      assigned_start_time: '1:07:03 PM',
-      description: 'a third description',
-      assigned_end_time: '1:07:03 PM',
-      end_time: 1490893623564,
-      id: 3,
-      user_id: 2
-    }
-  ],
-  progress_bar: [{ user_id: 1, incomplete_tasks: 100, completed_tasks: 0 },
-    { user_id: 2, incomplete_tasks: 100, completed_tasks: 0 }
-  ],
-  profile: {
-    email: 'w.chou06@gmail.com',
-    email_verified: true,
-    name: 'William Chou',
-    given_name: 'William',
-    family_name: 'Chou',
-    picture: 'https://lh3.googleusercontent.com/-W-gTcGV7dbc/AAAAAAAAAAI/AAAAAAAAAMI/7Se5sPnOO3o/photo.jpg',
-    gender: 'male',
-    locale: 'en',
-    clientID: 'TejTiGWUQtFqn8hCNABYJ1KREwuDwyat',
-    updated_at: '2017-03-29T22:30:08.087Z',
-    user_id: 'google-oauth2|109368986717559485761',
-    nickname: 'w.chou06',
-    identities: [
-      [Object]
-    ],
-    created_at: '2017-03-29T18:29:38.017Z',
-    global_client_id: '4e3UBnAVcDUPWqHEWb2udw3qCO8qXsmk'
-  },
-  type: 'eventCreation-newProject'
-}
-eventCreation_newProject(data);
+
 wss.on('connection', (client) => {
   console.log(`connection ${client}`);
   wss.broadcast("New client connected!")
@@ -224,18 +71,15 @@ wss.on('connection', (client) => {
     console.log('Client disconnected')
   });
 });
+
 async function eventCreation_newProject(data) {
-
-
   function show_object_methods(o) {
     for (let m in o) { console.log(m) };
   }
   var manager_email = data.profile.email;
-  // console.log(manager_email)
-  console.log('-----------1. find manager');
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
-  console.log('----------- 2. found manager');
   data = data.eventCreation
+
   const add_project = {
     name: data.name,
     start_date: new Date(data.startDate),
@@ -251,27 +95,46 @@ async function eventCreation_newProject(data) {
       assigned_end_time: new Date(`${data.startDate}T${t.assigned_end_time}`),
       name: t.name,
       description: t.description,
+      userId: t.user_id
     };
   });
-  console.log(JSON.stringify(add_users));
-  const [project, new_users, new_tasks] = await Promise.all([
+
+  const [project, new_users] = await Promise.all([
     models.project.create(add_project),
     models.user.bulkCreate(add_users, { individualHooks: true, returning: true }),
-    models.task.bulkCreate(add_tasks, { individualHooks: true, returning: true }),
   ]);
-  // Promise.all([project.save(), new_users.save(), new_tasks.save()]);
-  console.log(project.toJSON())
-    // console.log(new_users.toJSON())
-  console.log('assign manager to project');
   await project.setUser(event_manager);
-  console.log('finished assigning manager to project');
-
-  // console.log(new_users)
   for (const user of new_users) {
-    show_object_methods(user);
-    console.log(user.toJSON())
     user.addProject(project);
   }
+
+  user_id_mapping = {};
+
+  for (var ou of data.assigned_people) {
+    user_id_mapping[ou.email] = {};
+    user_id_mapping[ou.email].old_id = ou.id;
+  }
+  for (var nu of new_users) {
+    user_id_mapping[nu.toJSON().email].new_id = nu.toJSON().id;
+  }
+  // console.log(user_id_mapping);
+  // console.log(add_tasks);
+  let remapped_task_user_ids = add_tasks.map((t) => {
+      for (var u in user_id_mapping) {
+        if (user_id_mapping[u].old_id == t.userId) {
+          // console.log(user_id_mapping[u].old_id)
+          // console.log(t.userId);
+          t.userId = user_id_mapping[u].new_id
+
+        }
+        t.projectId = project.toJSON().id
+      }
+      return t;
+    })
+    // console.log(remapped_task_user_ids)
+  console.log('=------------------start insert of tasks');
+  let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
+  console.log('=-----------finished inserting tasks');
 }
 
 login = (data, client) => {
