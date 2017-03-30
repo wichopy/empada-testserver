@@ -50,7 +50,10 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: true }).then(() => {
+console.log('before sync');
+models.sequelize.sync({ force: false }).then(() => {
+console.log('after sync');
+  
   clientConnected = () => {
     models.task.findAll({
         attributes: [
@@ -79,14 +82,14 @@ models.sequelize.sync({ force: true }).then(() => {
       }
     });
   };
-
+  
   wss.on('connection', (client) => {
     console.log(`connection ${client}`);
     clientConnected();
-
     client.on('message', (data) => {
       data = JSON.parse(data)
         // wss.broadcast(event);
+      debugger;  
       switch (data.type) {
         case 'auth0-login':
           login(data)
@@ -97,18 +100,25 @@ models.sequelize.sync({ force: true }).then(() => {
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
-          console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data, client);
-          break;
-
-        case 'add-contractor-to-progress-bar':
-          addContractorToProgressBar(data);
           break;
 
         case 'request-tasks':
           getTasks(data, client);
           break;
+
+        // case 'request-projects':
+        //   getTasks(data, client);
+        //   break;
+
+        // case 'request-users':
+        //   getTasks(data, client);
+        //   break;
+
+        // case 'combine-requests':
+        //   getTasks(data, client);
+        //   break;
 
         default:
           throw new Error("Unknown event type " + data.type)
@@ -131,6 +141,7 @@ models.sequelize.sync({ force: true }).then(() => {
   }
 
   startTimeForContractorTasks = (data) => {
+    console.log('entered startTimeForContractorTasks')
     models.task.update({
       start_time: data.start_time
     }, {
@@ -158,6 +169,7 @@ models.sequelize.sync({ force: true }).then(() => {
   }
 
   sendDonutGraphInfo = (data, client) => {
+    console.log('entered sendDonutGraphInfo')
     let message = {
       type: 'update-progress-bar',
       progress_bar: data.progress_bar
@@ -168,11 +180,55 @@ models.sequelize.sync({ force: true }).then(() => {
 
   getTasks = (data, client) => {
     console.log('entered getTasks');
-    models.tasks.findAll({
-      attributes: [ userId ]
-    // }).models.users.findAll({
-
-    }).then((res) => {
-      console.log(res);
+    let tasks = await models.task.findAll({raw: true})
+      .then((res) => {
+        return res;
     })
+
+    let projects = await models.projects.findAll({raw: true})
+      .then((res) => {
+        return res;
+    })
+
+    let users = await models.users.findAll({raw: true})
+      .then((res) => {
+        return res;
+    })
+
+    let message = {
+      type: progress-bar-update,
+      tasks: task,
+      projects: projects,
+      users: users
+    }
+    client.send(JSON.stringify(message));
   }
+
+  // getProjects = (data, client) => {
+  //   console.log('entered getProjects');
+  //   models.projects.findAll()
+  //     .then((res) => {
+  //       // console.log(res);
+  //     client.send(JSON.stringify(res));
+  //   })
+  // }
+
+
+  // getUsers = (data, client) => {
+  //     console.log('entered getUsers');
+  //     models.users.findAll()
+  //       .then((res) => {
+  //         // console.log(res);
+  //       client.send(JSON.stringify(res));
+  //     })
+  //   }
+
+  // combineRequests = (data, client) => {
+  //     // console.log('entered combineRequests');
+  //     // models.task.findAll()
+  //     // .then((res) => {
+  //     //   // console.log(res);
+  //     //   client.send(JSON.stringify(res));
+  //     // })
+  //   }
+
