@@ -9,8 +9,8 @@ module.exports = function (sequelize, DataTypes) {
     classMethods: {
       associate: function (models) {
         // associations can be defined here
-        project.belongsToMany(models.user, {through: "assigned_users"})
-        // project.hasMany(models.manager_user)
+        project.belongsToMany(models.user, { through: "assigned_users" })
+          // project.hasMany(models.manager_user)
         project.belongsTo(models.user)
         project.hasMany(models.task)
       }
