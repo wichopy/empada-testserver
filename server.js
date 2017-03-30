@@ -105,20 +105,13 @@ console.log('after sync');
           break;
 
         case 'request-tasks':
+          getTasksAndUsers(data, client);
+          break;
+
+        case 'request-tasks-and-users':
           getTasks(data, client);
           break;
 
-        // case 'request-projects':
-        //   getTasks(data, client);
-        //   break;
-
-        // case 'request-users':
-        //   getTasks(data, client);
-        //   break;
-
-        // case 'combine-requests':
-        //   getTasks(data, client);
-        //   break;
 
         default:
           throw new Error("Unknown event type " + data.type)
@@ -126,7 +119,7 @@ console.log('after sync');
     });
     // Set up a callback for when a client closes the socket. This usually means they closed their browser.
     client.on('close', (event) => {
-      console.log('Client disconnected')
+      console.log('Client disconnected');
     });
   });
 
@@ -141,7 +134,7 @@ console.log('after sync');
   }
 
   startTimeForContractorTasks = (data) => {
-    console.log('entered startTimeForContractorTasks')
+    console.log('entered startTimeForContractorTasks');
     models.task.update({
       start_time: data.start_time
     }, {
@@ -178,14 +171,9 @@ console.log('after sync');
     }
   })
 
-  async function getTasks(data, client) {
-    console.log('entered getTasks');
+  async function getTasksAndUsers(data, client) {
+    console.log('entered getTasksAndUsers');
     let tasks = await models.task.findAll()
-      .then((res) => {
-        return res;
-    })
-
-    let projects = await models.project.findAll()
       .then((res) => {
         return res;
     })
@@ -199,6 +187,22 @@ console.log('after sync');
       type: "progress-bar-update",
       tasks: tasks,
       users: users
+    }
+
+    console.log(message)
+    client.send(JSON.stringify(message));
+  }
+
+async function getTasks(data, client) {
+    console.log('entered getTasks');
+    let tasks = await models.task.findAll()
+      .then((res) => {
+        return res;
+    })
+
+    let message = {
+      type: "update-list-of-tasks",
+      tasks: tasks
     }
 
     console.log(message)
