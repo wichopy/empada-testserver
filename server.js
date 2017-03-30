@@ -180,17 +180,17 @@ console.log('after sync');
 
   async function getTasks(data, client) {
     console.log('entered getTasks');
-    let tasks = await models.task.findAll({raw: true})
+    let tasks = await models.task.findAll()
       .then((res) => {
         return res;
     })
 
-    let projects = await models.project.findAll({raw: true})
+    let projects = await models.project.findAll()
       .then((res) => {
         return res;
     })
 
-    let users = await models.user.findAll({raw: true})
+    let users = await models.user.findAll()
       .then((res) => {
         return res;
     })
@@ -198,7 +198,6 @@ console.log('after sync');
     let message = {
       type: "progress-bar-update",
       tasks: tasks,
-      projects: projects,
       users: users
     }
 
