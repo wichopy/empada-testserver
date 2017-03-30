@@ -178,57 +178,30 @@ console.log('after sync');
     }
   })
 
-  getTasks = (data, client) => {
+  async function getTasks(data, client) {
     console.log('entered getTasks');
     let tasks = await models.task.findAll({raw: true})
       .then((res) => {
         return res;
     })
 
-    let projects = await models.projects.findAll({raw: true})
+    let projects = await models.project.findAll({raw: true})
       .then((res) => {
         return res;
     })
 
-    let users = await models.users.findAll({raw: true})
+    let users = await models.user.findAll({raw: true})
       .then((res) => {
         return res;
     })
 
     let message = {
-      type: progress-bar-update,
-      tasks: task,
+      type: "progress-bar-update",
+      tasks: tasks,
       projects: projects,
       users: users
     }
+
+    console.log(message)
     client.send(JSON.stringify(message));
   }
-
-  // getProjects = (data, client) => {
-  //   console.log('entered getProjects');
-  //   models.projects.findAll()
-  //     .then((res) => {
-  //       // console.log(res);
-  //     client.send(JSON.stringify(res));
-  //   })
-  // }
-
-
-  // getUsers = (data, client) => {
-  //     console.log('entered getUsers');
-  //     models.users.findAll()
-  //       .then((res) => {
-  //         // console.log(res);
-  //       client.send(JSON.stringify(res));
-  //     })
-  //   }
-
-  // combineRequests = (data, client) => {
-  //     // console.log('entered combineRequests');
-  //     // models.task.findAll()
-  //     // .then((res) => {
-  //     //   // console.log(res);
-  //     //   client.send(JSON.stringify(res));
-  //     // })
-  //   }
-
