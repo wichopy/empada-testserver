@@ -29,11 +29,11 @@ const PORT = 3001;
 
 // for (data_row of data) {
 //   models.task.create({
-//     task_name: data_row[0],
-//     start_date: data_row[1],
-//     end_date: data_row[2],
-//     assigned_start_date: data_row[3],
-//     assigned_end_date: data_row[4]
+//     name: data_row[0],
+//     start_time: data_row[1],
+//     end_time: data_row[2],
+//     assigned_start_time: data_row[3],
+//     assigned_end_time: data_row[4]
 //   })
 //   .then(() => {
 //     console.log("Seed is in the database.")
@@ -50,22 +50,24 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: true }).then(() => {
+models.sequelize.sync({ force: false }).then(() => {
   clientConnected = () => {
-    models.task.findAll(
-        // {
-        // attributes: [
-        //   'name',
-        //   'start_date',
-        //   'end_date',
-        //   'assigned_start_date',
-        //   'assigned_end_date'
-        // ]
-        // }
-      )
+    models.task.findAll({
+      attributes: [
+        'name',
+        'start_time',
+        'end_time',
+        'assigned_start_time',
+        'assigned_end_time'
+      ]
+      // where: {
+      //   project_id: data.project_id,
+      // }
+      })
       .then((data) => {
         console.log("queried tasks from server when client connected");
-        wss.broadcast({ type: 'tasks', data: data });
+        // client.send(JSON.stringify({type: 'allTasks', data: data.data}));
+        wss.broadcast({ type: 'allTasks', data: data });
       })
   }
 
@@ -93,17 +95,25 @@ models.sequelize.sync({ force: true }).then(() => {
         case 'auth0-login':
           login(data)
           break;
+
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           break;
+
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data);
           break;
+
         case 'add-contractor-to-progress-bar':
           addContractorToProgressBar(data);
           break;
+
+        case 'askingForNewsfeedUpdate':
+          updateNewsfeed(data);
+          break;
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
@@ -114,7 +124,7 @@ models.sequelize.sync({ force: true }).then(() => {
     });
   });
 
-  login = (data, client) => {
+  const login = (data, client) => {
     models.user.count({ where: { email: data.email } }).then((count) => {
       if (count > 0) {
         console.log('user exists');
@@ -124,7 +134,42 @@ models.sequelize.sync({ force: true }).then(() => {
     })
   }
 
-  function startTimeForContractorTasks(receivedMessage) {
+  const updateNewsfeed = (data) => {
+    models.task.findAll({
+      attributes: [
+        // 'user_id',
+        'name',
+        'start_time',
+        'end_time',
+        'assigned_start_time',
+        'assigned_end_time'
+      ]
+      // where: {
+      //   project_id: data.project_id,
+      // }
+    })
+    .then( (allTasks) => {
+      // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
+      wss.broadcast({ type: 'allTasks', data: allTasks });
+
+    //   return (model.notification.findAll(
+    //     {attributes: [
+    //       'title',
+    //       'description',
+    //       'type',
+    //       'time'
+    //     ],
+    //     where: {
+    //       project_id: data.project_id
+    //     }
+    //   }))
+    // })
+    // .then( (user_logs) => {
+    //   client.send(JSON.stringify(newsfeed));
+    })
+  }
+
+  const startTimeForContractorTasks = (receivedMessage) => {
     models.task.update({
       start_time: receivedMessage.start_time
     }, {
@@ -137,7 +182,7 @@ models.sequelize.sync({ force: true }).then(() => {
     })
   }
 
-  function endTimeForContractorTasks(receivedMessage) {
+  const endTimeForContractorTasks = (receivedMessage) => {
     console.log('endTimeForContractorTasks');
     models.task.update({
       end_time: receivedMessage.end_time
@@ -151,12 +196,11 @@ models.sequelize.sync({ force: true }).then(() => {
     })
   }
 
-  function sendDonutGraphInfo(receivedMessage) {
+  const sendDonutGraphInfo = (receivedMessage) => {
     let message = {
       type: 'update-progress-bar',
       progress_bar: receivedMessage.progress_bar
     }
     client.send(JSON.stringify(message));
   }
-
 })

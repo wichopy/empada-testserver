@@ -11,7 +11,7 @@ module.exports = {
     */
     return [
       queryInterface.addColumn('tasks', 'assigned_start_time', {type: Sequelize.DATE}),
-      queryInterface.addColumn('tasks', 'assigned_end_time', {type: Sequelize.DATE})      
+      queryInterface.addColumn('tasks', 'assigned_end_time', {type: Sequelize.DATE})
       ];
   },
 
@@ -25,7 +25,7 @@ module.exports = {
     */
     return [
       queryInterface.removeColumn('tasks', 'assigned_start_time'),
-      queryInterface.removeColumn('tasks', 'assigned_end_time')      
+      queryInterface.removeColumn('tasks', 'assigned_end_time')
     ];
   }
 };
