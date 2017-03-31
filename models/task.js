@@ -1,6 +1,7 @@
 'use strict';
 module.exports = function (sequelize, DataTypes) {
   var task = sequelize.define('task', {
+
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     start_time: DataTypes.DATE,
