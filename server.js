@@ -57,19 +57,19 @@ models.sequelize.sync({ force: true }).then(() => {
   console.log('after sync');
 
   clientConnected = () => {
-    models.task.findAll({
-      attributes: [
-        'name',
-        'start_time',
-        'end_time',
-        'assigned_start_time',
-        'assigned_end_time'
-      ]
-      // where: {
-      //   project_id: data.project_id,
-      // }
-
-      })
+    models.task.findAll(//{
+    //   attributes: [
+    //     'name',
+    //     'start_time',
+    //     'end_time',
+    //     'assigned_start_time',
+    //     'assigned_end_time'
+    //   ]
+    //   // where: {
+    //   //   project_id: data.project_id,
+    //   // }
+      //}
+      )
       .then((data) => {
         console.log("queried tasks from server when client connected");
         // client.send(JSON.stringify({type: 'allTasks', data: data.data}));
@@ -152,19 +152,20 @@ const login = (data, client) => {
 }
 
 const updateNewsfeed = (data) => {
-  models.task.findAll({
-    attributes: [
-      // 'user_id',
-      'name',
-      'start_time',
-      'end_time',
-      'assigned_start_time',
-      'assigned_end_time'
-    ]
-    // where: {
-    //   project_id: data.project_id,
-    // }
-  })
+  models.task.findAll(//{
+  //   attributes: [
+  //     // 'user_id',
+  //     'name',
+  //     'start_time',
+  //     'end_time',
+  //     'assigned_start_time',
+  //     'assigned_end_time'
+  //   ]
+  //   // where: {
+  //   //   project_id: data.project_id,
+  //   // }
+  // }
+  )
   .then( (allTasks) => {
     // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
     wss.broadcast({ type: 'allTasks', data: allTasks });
