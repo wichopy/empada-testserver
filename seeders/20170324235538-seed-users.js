@@ -22,9 +22,9 @@ module.exports = {
         id: 1
       },
       { 
-        first_name: 'Lucy',
-        last_name: 'Luck',
-        email: 't@t.com',
+        first_name: 'Lola',
+        last_name: 'Looly',
+        email: 'l@l.com',
         createdAt: new Date(), 
         updatedAt: new Date(),
         id: 2
@@ -32,7 +32,7 @@ module.exports = {
       { 
         first_name: 'Ben',
         last_name: 'Benson',
-        email: 't@t.com',
+        email: 'b@b.com',
         createdAt: new Date(), 
         updatedAt: new Date(),
         id: 3
@@ -40,7 +40,7 @@ module.exports = {
       { 
         first_name: 'Steve',
         last_name: 'Stevery',
-        email: 't@t.com',
+        email: 's@s.com',
         createdAt: new Date(), 
         updatedAt: new Date(),
         id: 4
