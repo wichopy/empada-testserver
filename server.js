@@ -144,10 +144,20 @@ function endTimeForContractorTasks(receivedMessage) {
 }
 
 async function eventCreation_newProject(data) {
+  /*
+  Creates a new event following this flow:
+  1. find event manager from logged in email.
+  2. Insert a new project and new users.
+  3. assign this project to this event manager.
+  4. assign new users this project.
+  5. map front end user id's to newly created user ids.
+  6. assign tasks the newly inserted user id's and project id.
+  7. insert taks.
+  */
   function show_object_methods(o) {
     for (let m in o) { console.log(m) };
   }
-  var manager_email = data.profile.email;
+  const manager_email = data.profile.email;
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
   data = data.eventCreation
 
@@ -174,36 +184,31 @@ async function eventCreation_newProject(data) {
     models.project.create(add_project),
     models.user.bulkCreate(add_users, { individualHooks: true, returning: true }),
   ]);
+  //assign manager to project.
   await project.setUser(event_manager);
+
+  //assign project to user.
   for (const user of new_users) {
     user.addProject(project);
   }
 
+  //map front end user id's to inserted user id's
   user_id_mapping = {};
-
-  for (var ou of data.assigned_people) {
+  for (const ou of data.assigned_people) {
     user_id_mapping[ou.email] = {};
     user_id_mapping[ou.email].old_id = ou.id;
   }
-  for (var nu of new_users) {
+  for (const nu of new_users) {
     user_id_mapping[nu.toJSON().email].new_id = nu.toJSON().id;
   }
-  // console.log(user_id_mapping);
-  // console.log(add_tasks);
   let remapped_task_user_ids = add_tasks.map((t) => {
-      for (var u in user_id_mapping) {
-        if (user_id_mapping[u].old_id == t.userId) {
-          // console.log(user_id_mapping[u].old_id)
-          // console.log(t.userId);
-          t.userId = user_id_mapping[u].new_id
-
-        }
-        t.projectId = project.toJSON().id
+    for (const u in user_id_mapping) {
+      if (user_id_mapping[u].old_id == t.userId) {
+        t.userId = user_id_mapping[u].new_id
       }
-      return t;
-    })
-    // console.log(remapped_task_user_ids)
-  console.log('=------------------start insert of tasks');
+    }
+    t.projectId = project.toJSON().id
+    return t;
+  })
   let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
-  console.log('=-----------finished inserting tasks');
 }
