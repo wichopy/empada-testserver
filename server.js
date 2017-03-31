@@ -15,7 +15,29 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
+<<<<<<< HEAD
 console.log('wait for db model sync');
+=======
+console.log('before sync');
+models.sequelize.sync({ force: false }).then(() => {
+console.log('after sync');
+  
+  clientConnected = () => {
+    models.task.findAll({
+        attributes: [
+          'name',
+          'start_time',
+          'end_time',
+          'assigned_start_time',
+          'assigned_end_time'
+        ]
+      })
+      .then((data) => {
+        console.log("queried tasks from server when client connected");
+        wss.broadcast({ type: 'tasks', data: data });
+      })
+  }
+>>>>>>> feature-progress-bar
 
 // models.sequelize.sync({ force: true })
 models.sequelize.sync();
@@ -59,44 +81,56 @@ models.sequelize.sync().then(() => {
       }
     });
   };
-
+  
   wss.on('connection', (client) => {
     console.log(`connection ${client}`);
     clientConnected();
-
     client.on('message', (data) => {
       data = JSON.parse(data)
         // wss.broadcast(event);
+      debugger;  
       switch (data.type) {
         case 'auth0-login':
           login(data)
           break;
+<<<<<<< HEAD
         case "eventCreation-newProject":
           eventCreation_newProject(data)
           break;
+=======
+
+>>>>>>> feature-progress-bar
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           break;
+
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
-          console.log('end-time-for-contractor-tasks-and-updating-progress-bar')
           endTimeForContractorTasks(data);
-          sendDonutGraphInfo(data);
+          sendDonutGraphInfo(data, client);
           break;
-        case 'add-contractor-to-progress-bar':
-          addContractorToProgressBar(data);
+
+        case 'request-tasks':
+          getTasksAndUsers(data, client);
           break;
+
+        case 'request-tasks-and-users':
+          getTasks(data, client);
+          break;
+
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
     });
     // Set up a callback for when a client closes the socket. This usually means they closed their browser.
     client.on('close', (event) => {
-      console.log('Client disconnected')
+      console.log('Client disconnected');
     });
   });
 
 });
 
+<<<<<<< HEAD
 login = (data, client) => {
   models.user.count({ where: { email: data.email } }).then((count) => {
     if (count > 0) {
@@ -112,6 +146,34 @@ function sendDonutGraphInfo(receivedMessage) {
     type: 'update-progress-bar',
     progress_bar: receivedMessage.progress_bar
 
+=======
+  startTimeForContractorTasks = (data) => {
+    console.log('entered startTimeForContractorTasks');
+    models.task.update({
+      start_time: data.start_time
+    }, {
+      where: {
+        projectId: data.project_id,
+        id: data.id
+      }
+    }).then((res) => {
+      console.log(res);
+    })
+  }
+
+  endTimeForContractorTasks = (data) => {
+    console.log('endTimeForContractorTasks');
+    models.task.update({
+      end_time: data.end_time
+    }, {
+      where: {
+        projectId: data.project_id,
+        id: data.id
+      }
+    }).then((res) => {
+      console.log(res);
+    })
+>>>>>>> feature-progress-bar
   }
   client.send(JSON.stringify(message));
 }
@@ -129,6 +191,7 @@ function startTimeForContractorTasks(receivedMessage) {
   })
 }
 
+<<<<<<< HEAD
 function endTimeForContractorTasks(receivedMessage) {
   console.log('endTimeForContractorTasks');
   models.task.update({
@@ -156,6 +219,38 @@ async function eventCreation_newProject(data) {
   */
   function show_object_methods(o) {
     for (let m in o) { console.log(m) };
+=======
+  sendDonutGraphInfo = (data, client) => {
+    console.log('entered sendDonutGraphInfo')
+    let message = {
+      type: 'update-progress-bar',
+      progress_bar: data.progress_bar
+    }
+    client.send(JSON.stringify(message));
+    }
+  })
+
+  async function getTasksAndUsers(data, client) {
+    console.log('entered getTasksAndUsers');
+    let tasks = await models.task.findAll()
+      .then((res) => {
+        return res;
+    })
+
+    let users = await models.user.findAll()
+      .then((res) => {
+        return res;
+    })
+
+    let message = {
+      type: "progress-bar-update",
+      tasks: tasks,
+      users: users
+    }
+
+    console.log(message)
+    client.send(JSON.stringify(message));
+>>>>>>> feature-progress-bar
   }
   const manager_email = data.profile.email;
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
@@ -180,6 +275,7 @@ async function eventCreation_newProject(data) {
     };
   });
 
+<<<<<<< HEAD
   const [project, new_users] = await Promise.all([
     models.project.create(add_project),
     models.user.bulkCreate(add_users, { individualHooks: true, returning: true }),
@@ -212,3 +308,20 @@ async function eventCreation_newProject(data) {
   })
   let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
 }
+=======
+async function getTasks(data, client) {
+    console.log('entered getTasks');
+    let tasks = await models.task.findAll()
+      .then((res) => {
+        return res;
+    })
+
+    let message = {
+      type: "update-list-of-tasks",
+      tasks: tasks
+    }
+
+    console.log(message)
+    client.send(JSON.stringify(message));
+  }
+>>>>>>> feature-progress-bar
