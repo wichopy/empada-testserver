@@ -1,16 +1,13 @@
 'use strict';
-<<<<<<< HEAD
-module.exports = function (sequelize, DataTypes) {
-=======
 
-module.exports = function(sequelize, DataTypes) {
->>>>>>> feature-progress-bar
+module.exports = function (sequelize, DataTypes) {
   var project = sequelize.define('project', {
     name: DataTypes.STRING,
     start_date: DataTypes.DATE,
     end_date: DataTypes.DATE,
     description: DataTypes.STRING
-  }, {
+  },
+  {
     classMethods: {
       associate: function (models) {
         // associations can be defined here
