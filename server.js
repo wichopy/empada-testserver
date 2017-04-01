@@ -106,7 +106,7 @@ models.sequelize.sync({ force: false }).then(() => {
 
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
-          clickedStartButton(data, client);          
+          clickedStartButton(data, client);       
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
@@ -321,7 +321,7 @@ async function eventCreation_newProject(data) {
 
 async function getTasks(data, client) {
   console.log('entered getTasks');
-  let tasks = await models.task.findAll({orderBy: ['assigned_start_time', 'ASC'] })
+  let tasks = await models.task.findAll()
   .then((res) => {
       return res;
   })
@@ -336,7 +336,7 @@ async function getTasks(data, client) {
 }
 
 const clickedStartButton = (data, client) => {
-  console.log('clicked start or end button');
+  console.log('clicked start button');
 
   const message = {
     type: "start-time-button-clicked",
@@ -347,7 +347,7 @@ const clickedStartButton = (data, client) => {
 }
 
 const clickedEndButton = (data, client) => {
-  console.log('clicked start or end button');
+  console.log('clicked end button');
 
   const message = {
     type: "end-time-button-clicked",
