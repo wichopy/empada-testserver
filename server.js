@@ -113,11 +113,11 @@ models.sequelize.sync({ force: true }).then(() => {
           sendDonutGraphInfo(data, client);
           break;
 
-        case 'request-tasks':
+        case 'request-tasks-and-users':
           getTasksAndUsers(data, client);
           break;
 
-        case 'request-tasks-and-users':
+        case 'request-tasks':
           getTasks(data, client);
           break;
 
@@ -180,7 +180,6 @@ const startTimeForContractorTasks = (data) => {
     },
     {
     where: {
-      project_id: data.project_id,
       id: data.id
       }
     }
@@ -190,16 +189,15 @@ const startTimeForContractorTasks = (data) => {
   })
 }
 
-const endTimeForContractorTasks = (receivedMessage) => {
+const endTimeForContractorTasks = (data) => {
   console.log('endTimeForContractorTasks');
   models.task.update(
     {
-    end_time: receivedMessage.end_time
+    end_time: data.end_time
     },
     {
     where: {
-      project_id: receivedMessage.project_id,
-      id: receivedMessage.id
+      id: data.id
       }
     }
   )
@@ -237,8 +235,6 @@ async function getTasksAndUsers(data, client) {
   console.log(message);
   client.send(JSON.stringify(message));
 }
-
-
 
 async function eventCreation_newProject(data) {
   /*
