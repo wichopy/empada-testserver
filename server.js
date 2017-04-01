@@ -152,7 +152,7 @@ const login = (data, client) => {
 }
 
 const updateNewsfeed = (data) => {
-  models.task.findAll(//{
+  models.task.findAll({
   //   attributes: [
   //     // 'user_id',
   //     'name',
@@ -161,11 +161,11 @@ const updateNewsfeed = (data) => {
   //     'assigned_start_time',
   //     'assigned_end_time'
   //   ]
-  //   // where: {
-  //   //   project_id: data.project_id,
-  //   // }
-  // }
-  )
+    // where: {
+    //   project_id: data.project_id,
+    // },
+    include: [models.user]
+  })
   .then( (allTasks) => {
     // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
     wss.broadcast({ type: 'allTasks', data: allTasks });
@@ -180,13 +180,13 @@ const startTimeForContractorTasks = (data) => {
     },
     {
     where: {
-      project_id: data.project_id,
+      // project_id: data.project_id,
       id: data.id
       }
     }
   )
   .then((res) => {
-    console.log(res);
+    // console.log(res);
   })
 }
 
@@ -198,13 +198,13 @@ const endTimeForContractorTasks = (receivedMessage) => {
     },
     {
     where: {
-      project_id: receivedMessage.project_id,
+      // project_id: receivedMessage.project_id,
       id: receivedMessage.id
       }
     }
   )
   .then((res) => {
-    console.log(res);
+    // console.log(res);
   })
 }
 
@@ -234,11 +234,9 @@ async function getTasksAndUsers(data, client) {
     users: users
   }
 
-  console.log(message);
+  // console.log(message);
   client.send(JSON.stringify(message));
 }
-
-
 
 async function eventCreation_newProject(data) {
   /*
@@ -272,8 +270,8 @@ async function eventCreation_newProject(data) {
 
   const add_tasks = data.tasks.map((t) => {
     return {
-      assigned_start_time: new Date(`${data.startDate}T${t.assigned_start_time}`),
-      assigned_end_time: new Date(`${data.startDate}T${t.assigned_end_time}`),
+      assigned_start_time: new Date(new Date(`${data.startDate}T${t.assigned_start_time}`).getTime() + 4*60*60*1000),
+      assigned_end_time: new Date(new Date(`${data.startDate}T${t.assigned_end_time}`).getTime() + 4*60*60*1000),
       name: t.name,
       description: t.description,
       userId: t.user_id
@@ -325,6 +323,6 @@ async function getTasks(data, client) {
     tasks: tasks
   };
 
-  console.log(message);
+  // console.log(message);
   client.send(JSON.stringify(message));
 }
