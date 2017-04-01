@@ -53,7 +53,7 @@ const server = express()
 const wss = new SocketServer({ server });
 
 console.log('before sync');
-models.sequelize.sync({ force: true }).then(() => {
+models.sequelize.sync({ force: false }).then(() => {
   console.log('after sync');
 
   clientConnected = () => {
@@ -106,11 +106,13 @@ models.sequelize.sync({ force: true }).then(() => {
 
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
+          clickedStartButton(data, client);          
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data, client);
+          clickedEndButton(data, client);
           break;
 
         case 'request-tasks-and-users':
@@ -126,7 +128,7 @@ models.sequelize.sync({ force: true }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          updateNewsfeed(data);
+          // updateNewsfeed(data);
           break;
 
         default:
@@ -176,7 +178,7 @@ const updateNewsfeed = (data) => {
 const startTimeForContractorTasks = (data) => {
   models.task.update(
     {
-    start_time: data.start_time
+      start_time: data.start_time
     },
     {
     where: {
@@ -186,6 +188,8 @@ const startTimeForContractorTasks = (data) => {
   )
   .then((res) => {
     console.log(res);
+  }).catch((err) => {
+    console.error(err);
   })
 }
 
@@ -193,7 +197,7 @@ const endTimeForContractorTasks = (data) => {
   console.log('endTimeForContractorTasks');
   models.task.update(
     {
-    end_time: data.end_time
+     end_time: data.end_time
     },
     {
     where: {
@@ -203,6 +207,8 @@ const endTimeForContractorTasks = (data) => {
   )
   .then((res) => {
     console.log(res);
+  }).catch((err) => {
+    console.error(err);
   })
 }
 
@@ -219,11 +225,15 @@ async function getTasksAndUsers(data, client) {
   let tasks = await models.task.findAll()
   .then((res) => {
     return res;
+  }).catch((err) => {
+    console.error(err);
   })
 
   let users = await models.user.findAll()
   .then((res) => {
     return res;
+  }).catch((err) => {
+    console.error(err);
   })
 
   let message = {
@@ -232,7 +242,7 @@ async function getTasksAndUsers(data, client) {
     users: users
   }
 
-  console.log(message);
+  // console.log(message);
   client.send(JSON.stringify(message));
 }
 
@@ -311,7 +321,7 @@ async function eventCreation_newProject(data) {
 
 async function getTasks(data, client) {
   console.log('entered getTasks');
-  let tasks = await models.task.findAll()
+  let tasks = await models.task.findAll({orderBy: ['assigned_start_time', 'ASC'] })
   .then((res) => {
       return res;
   })
@@ -321,6 +331,28 @@ async function getTasks(data, client) {
     tasks: tasks
   };
 
-  console.log(message);
+  // console.log(message);
+  client.send(JSON.stringify(message));
+}
+
+const clickedStartButton = (data, client) => {
+  console.log('clicked start or end button');
+
+  const message = {
+    type: "start-time-button-clicked",
+    id: data.id
+  }
+
+  client.send(JSON.stringify(message));
+}
+
+const clickedEndButton = (data, client) => {
+  console.log('clicked start or end button');
+
+  const message = {
+    type: "end-time-button-clicked",
+    id: data.id
+  }
+
   client.send(JSON.stringify(message));
 }
