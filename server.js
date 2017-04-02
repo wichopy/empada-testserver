@@ -128,7 +128,7 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          // updateNewsfeed(data);
+          updateNewsfeed(data);
           break;
 
         default:
