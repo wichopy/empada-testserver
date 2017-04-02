@@ -55,7 +55,7 @@ const wss = new SocketServer({ server });
 console.log('before sync');
 models.sequelize.sync().then(() => {
   console.log('after sync');
-  emailTasks(1);
+  emailTasks(3);
   clientConnected = () => {
     models.task.findAll( //{
         //   attributes: [
@@ -320,12 +320,35 @@ async function getTasks(data, client) {
 }
 
 async function emailTasks(project_id) {
-  const projectTasks = await models.task.findAll({ where: { projectId: project_id } })
-    .then((projTasks) => {
-      // show_object_methods(projTasks[0])
-      projTasks[0].getUser().then((res) => {
-        console.log(res.toJSON().email)
-      })
-    })
+  /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
+  const emailJSON = {};
+  // { where: { projectId: project_id } }
 
+  const projectTasks = await models.task.findAll({ where: { projectId: project_id } }).then((projTasks) => {
+    // show_object_methods(projTasks[0])
+
+    projTasks.forEach((task) => {
+      task.getUser().then((res) => {
+          const current_Email = res.toJSON().email;
+          console.log(current_Email)
+          if (emailJSON[current_Email]) {
+            emailJSON[current_Email].push(task.toJSON());
+            // console.log(emailJSON)
+          } else {
+            emailJSON[current_Email] = []
+            emailJSON[current_Email].push(task.toJSON());
+            // console.log(emailJSON)
+          }
+        })
+        // show_object_methods(task)
+        // user.getTasks().then((tasks) => {
+        //   tasks.forEach((task) => {
+        //     // show_object_methods(task)
+        //     console.log(task.toJSON())
+        //   })
+        // })
+      console.log(emailJSON)
+
+    })
+  })
 }
