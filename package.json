@@ -12,6 +12,7 @@
   "dependencies": {
     "chart.js": "^2.5.0",
     "chartkick": "^2.2.3",
+    "dotenv": "^4.0.0",
     "express": "^4.15.2",
     "pg": "^6.1.5",
     "react-chartkick": "^0.1.3",

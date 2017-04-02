@@ -5,8 +5,10 @@ const WebSocket = require('ws');
 const models = require("./models");
 // Set the port to 4000
 const PORT = 3001;
-
-
+require('dotenv').config()
+const mailgun_api_key = process.env.api_key;
+const domain = process.env.domain;
+const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
 // let data = [
 //   ["Washington",
 //     new Date(1789, 4, 29),
@@ -55,7 +57,7 @@ const wss = new SocketServer({ server });
 console.log('before sync');
 models.sequelize.sync().then(() => {
   console.log('after sync');
-  emailTasks(3);
+  emailTasks(1);
   clientConnected = () => {
     models.task.findAll( //{
         //   attributes: [
@@ -321,34 +323,61 @@ async function getTasks(data, client) {
 
 async function emailTasks(project_id) {
   /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
-  const emailJSON = {};
   // { where: { projectId: project_id } }
-
-  const projectTasks = await models.task.findAll({ where: { projectId: project_id } }).then((projTasks) => {
+  let project_details = await models.project.findOne({ where: { id: project_id }, raw: true }).then((data) => data);
+  console.log('found project');
+  let emails = await models.task.findAll({ where: { projectId: project_id } }).then((tasks) => {
     // show_object_methods(projTasks[0])
-
-    projTasks.forEach((task) => {
-      task.getUser().then((res) => {
-          const current_Email = res.toJSON().email;
-          console.log(current_Email)
-          if (emailJSON[current_Email]) {
-            emailJSON[current_Email].push(task.toJSON());
-            // console.log(emailJSON)
-          } else {
-            emailJSON[current_Email] = []
-            emailJSON[current_Email].push(task.toJSON());
-            // console.log(emailJSON)
-          }
-        })
-        // show_object_methods(task)
-        // user.getTasks().then((tasks) => {
-        //   tasks.forEach((task) => {
-        //     // show_object_methods(task)
-        //     console.log(task.toJSON())
-        //   })
-        // })
-      console.log(emailJSON)
-
+    const email_list = [];
+    tasks.forEach((t) => {
+        // show_object_methods(t)
+        email_list.push(t.getUser().then((u) => {
+          console.log('inside promise, finding email:');
+          console.log(u.toJSON().email);
+          return u.toJSON().email
+            // forEach((task) => {
+            //   task.getUser().then((res) => {
+            //     const current_Email = res.toJSON().email;
+            //   })
+        }))
+      }) // Promise.all(email_tasks).then((res) => res.forEach((t) => console.log(t.toJSON())))
+    return Promise.all(email_list).then((res) => {
+      return res
     })
+  })
+
+  Array.prototype.contains = function (v) {
+    for (var i = 0; i < this.length; i++) {
+      if (this[i] === v) return true;
+    }
+    return false;
+  };
+
+  Array.prototype.unique = function () {
+    var arr = [];
+    for (var i = 0; i < this.length; i++) {
+      if (!arr.contains(this[i])) {
+        arr.push(this[i]);
+      }
+    }
+    return arr;
+  }
+  console.log(`Promise all finished, output: ${emails.unique()}`)
+  project_details = project_details;
+  emails = emails.unique()
+  console.log(project_details)
+  emails.forEach((user_email) => {
+    var data = {
+      from: 'Empada Server <noreply@empada.bz>',
+      to: user_email,
+      subject: `You were invited to ${project_details.name}`,
+      text: `You have been assigned to project: ${project_details.name}
+                Project description: ${project_details.description}
+                Hit this link to go to your task list: http://something.com`
+    };
+
+    mailgun.messages().send(data, function (error, body) {
+      console.log(body);
+    });
   })
 }
