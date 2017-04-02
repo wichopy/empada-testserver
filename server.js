@@ -53,22 +53,22 @@ const server = express()
 const wss = new SocketServer({ server });
 
 console.log('before sync');
-models.sequelize.sync({ force: true }).then(() => {
+models.sequelize.sync().then(() => {
   console.log('after sync');
-
+  emailTasks(1);
   clientConnected = () => {
-    models.task.findAll(//{
-    //   attributes: [
-    //     'name',
-    //     'start_time',
-    //     'end_time',
-    //     'assigned_start_time',
-    //     'assigned_end_time'
-    //   ]
-    //   // where: {
-    //   //   project_id: data.project_id,
-    //   // }
-      //}
+    models.task.findAll( //{
+        //   attributes: [
+        //     'name',
+        //     'start_time',
+        //     'end_time',
+        //     'assigned_start_time',
+        //     'assigned_end_time'
+        //   ]
+        //   // where: {
+        //   //   project_id: data.project_id,
+        //   // }
+        //}
       )
       .then((data) => {
         console.log("queried tasks from server when client connected");
@@ -94,7 +94,7 @@ models.sequelize.sync({ force: true }).then(() => {
     client.on('message', (data) => {
       data = JSON.parse(data)
         // wss.broadcast(event);
-      // debugger;
+        // debugger;
       switch (data.type) {
         case 'auth0-login':
           login(data)
@@ -152,58 +152,52 @@ const login = (data, client) => {
 }
 
 const updateNewsfeed = (data) => {
-  models.task.findAll(//{
-  //   attributes: [
-  //     // 'user_id',
-  //     'name',
-  //     'start_time',
-  //     'end_time',
-  //     'assigned_start_time',
-  //     'assigned_end_time'
-  //   ]
-  //   // where: {
-  //   //   project_id: data.project_id,
-  //   // }
-  // }
-  )
-  .then( (allTasks) => {
-    // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
-    wss.broadcast({ type: 'allTasks', data: allTasks });
+  models.task.findAll( //{
+      //   attributes: [
+      //     // 'user_id',
+      //     'name',
+      //     'start_time',
+      //     'end_time',
+      //     'assigned_start_time',
+      //     'assigned_end_time'
+      //   ]
+      //   // where: {
+      //   //   project_id: data.project_id,
+      //   // }
+      // }
+    )
+    .then((allTasks) => {
+      // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
+      wss.broadcast({ type: 'allTasks', data: allTasks });
 
-  })
+    })
 }
 
 const startTimeForContractorTasks = (data) => {
-  models.task.update(
-    {
-    start_time: data.start_time
-    },
-    {
-    where: {
-      id: data.id
+  models.task.update({
+      start_time: data.start_time
+    }, {
+      where: {
+        id: data.id
       }
-    }
-  )
-  .then((res) => {
-    console.log(res);
-  })
+    })
+    .then((res) => {
+      console.log(res);
+    })
 }
 
 const endTimeForContractorTasks = (data) => {
   console.log('endTimeForContractorTasks');
-  models.task.update(
-    {
-    end_time: data.end_time
-    },
-    {
-    where: {
-      id: data.id
+  models.task.update({
+      end_time: data.end_time
+    }, {
+      where: {
+        id: data.id
       }
-    }
-  )
-  .then((res) => {
-    console.log(res);
-  })
+    })
+    .then((res) => {
+      console.log(res);
+    })
 }
 
 const sendDonutGraphInfo = (data, client) => {
@@ -217,14 +211,14 @@ const sendDonutGraphInfo = (data, client) => {
 async function getTasksAndUsers(data, client) {
   console.log('entered getTasksAndUsers');
   let tasks = await models.task.findAll()
-  .then((res) => {
-    return res;
-  })
+    .then((res) => {
+      return res;
+    })
 
   let users = await models.user.findAll()
-  .then((res) => {
-    return res;
-  })
+    .then((res) => {
+      return res;
+    })
 
   let message = {
     type: "progress-bar-update",
@@ -236,6 +230,9 @@ async function getTasksAndUsers(data, client) {
   client.send(JSON.stringify(message));
 }
 
+function show_object_methods(o) {
+  for (let m in o) { console.log(m) };
+}
 async function eventCreation_newProject(data) {
   /*
   Creates a new event following this flow:
@@ -247,9 +244,6 @@ async function eventCreation_newProject(data) {
   6. assign tasks the newly inserted user id's and project id.
   7. insert taks.
   */
-  function show_object_methods(o) {
-    for (let m in o) { console.log(m) };
-  }
 
   const manager_email = data.profile.email;
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
@@ -312,9 +306,9 @@ async function eventCreation_newProject(data) {
 async function getTasks(data, client) {
   console.log('entered getTasks');
   let tasks = await models.task.findAll()
-  .then((res) => {
+    .then((res) => {
       return res;
-  })
+    })
 
   let message = {
     type: "update-list-of-tasks",
@@ -323,4 +317,15 @@ async function getTasks(data, client) {
 
   console.log(message);
   client.send(JSON.stringify(message));
+}
+
+async function emailTasks(project_id) {
+  const projectTasks = await models.task.findAll({ where: { projectId: project_id } })
+    .then((projTasks) => {
+      // show_object_methods(projTasks[0])
+      projTasks[0].getUser().then((res) => {
+        console.log(res.toJSON().email)
+      })
+    })
+
 }
