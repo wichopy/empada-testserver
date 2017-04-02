@@ -55,9 +55,9 @@ const server = express()
 const wss = new SocketServer({ server });
 
 console.log('before sync');
-models.sequelize.sync().then(() => {
+
+models.sequelize.sync({ force: false }).then(() => {
   console.log('after sync');
-  emailTasks(1);
   clientConnected = () => {
     models.task.findAll( //{
         //   attributes: [
@@ -108,11 +108,13 @@ models.sequelize.sync().then(() => {
 
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
+          clickedStartButton(data, client);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data, client);
+          clickedEndButton(data, client);
           break;
 
         case 'request-tasks-and-users':
@@ -154,7 +156,7 @@ const login = (data, client) => {
 }
 
 const updateNewsfeed = (data) => {
-  models.task.findAll( //{
+  models.task.findAll({
       //   attributes: [
       //     // 'user_id',
       //     'name',
@@ -163,15 +165,14 @@ const updateNewsfeed = (data) => {
       //     'assigned_start_time',
       //     'assigned_end_time'
       //   ]
-      //   // where: {
-      //   //   project_id: data.project_id,
-      //   // }
-      // }
-    )
+      // where: {
+      //   project_id: data.project_id,
+      // },
+      include: [models.user]
+    })
     .then((allTasks) => {
       // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
       wss.broadcast({ type: 'allTasks', data: allTasks });
-
     })
 }
 
@@ -184,7 +185,9 @@ const startTimeForContractorTasks = (data) => {
       }
     })
     .then((res) => {
-      console.log(res);
+      // console.log(res);
+    }).catch((err) => {
+      console.error(err);
     })
 }
 
@@ -198,7 +201,9 @@ const endTimeForContractorTasks = (data) => {
       }
     })
     .then((res) => {
-      console.log(res);
+      // console.log(res);
+    }).catch((err) => {
+      console.error(err);
     })
 }
 
@@ -215,20 +220,23 @@ async function getTasksAndUsers(data, client) {
   let tasks = await models.task.findAll()
     .then((res) => {
       return res;
+    }).catch((err) => {
+      console.error(err);
     })
 
   let users = await models.user.findAll()
     .then((res) => {
       return res;
+    }).catch((err) => {
+      console.error(err);
     })
 
   let message = {
-    type: "progress-bar-update",
-    tasks: tasks,
-    users: users
-  }
-
-  console.log(message);
+      type: "progress-bar-update",
+      tasks: tasks,
+      users: users
+    }
+    // console.log(message);
   client.send(JSON.stringify(message));
 }
 
@@ -264,8 +272,8 @@ async function eventCreation_newProject(data) {
 
   const add_tasks = data.tasks.map((t) => {
     return {
-      assigned_start_time: new Date(`${data.startDate}T${t.assigned_start_time}`),
-      assigned_end_time: new Date(`${data.startDate}T${t.assigned_end_time}`),
+      assigned_start_time: new Date(new Date(`${data.startDate}T${t.assigned_start_time}`).getTime() + 4 * 60 * 60 * 1000),
+      assigned_end_time: new Date(new Date(`${data.startDate}T${t.assigned_end_time}`).getTime() + 4 * 60 * 60 * 1000),
       name: t.name,
       description: t.description,
       userId: t.user_id
@@ -317,9 +325,10 @@ async function getTasks(data, client) {
     tasks: tasks
   };
 
-  console.log(message);
+  // console.log(message);
   client.send(JSON.stringify(message));
 }
+
 
 async function emailTasks(project_id) {
   /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
@@ -380,4 +389,29 @@ async function emailTasks(project_id) {
       console.log(body);
     });
   })
+
+}
+
+
+const clickedStartButton = (data, client) => {
+  console.log('clicked start button');
+
+  const message = {
+    type: "start-time-button-clicked",
+    id: data.id
+  }
+
+  client.send(JSON.stringify(message));
+}
+
+const clickedEndButton = (data, client) => {
+  console.log('clicked end button');
+
+  const message = {
+    type: "end-time-button-clicked",
+    id: data.id
+  }
+
+  client.send(JSON.stringify(message));
+
 }
