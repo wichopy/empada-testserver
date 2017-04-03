@@ -33,16 +33,16 @@ module.exports = {
         updatedAt: new Date(),
         id: 1,
         userId: 1
-      },
-      {
-        name: 'Dancing',
-        start_date: new Date(),
-        end_date: new Date(),
-        createdAt: new Date(), 
-        updatedAt: new Date(),
-        id: 2,
-        userId: 2
-      },
+      }
+      // {
+      //   name: 'Dancing',
+      //   start_date: new Date(),
+      //   end_date: new Date(),
+      //   createdAt: new Date(), 
+      //   updatedAt: new Date(),
+      //   id: 2,
+      //   userId: 2
+      // },
       ], {});
   },
 

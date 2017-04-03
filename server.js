@@ -105,6 +105,7 @@ models.sequelize.sync({ force: false }).then(() => {
 
         case "eventCreation-newProject":
           debugger;
+
           eventCreation_newProject(data, client);
           break;
 
@@ -112,7 +113,6 @@ models.sequelize.sync({ force: false }).then(() => {
           startTimeForContractorTasks(data);
           clickedStartButton(data, client);
           updatingProgressBar(data);
-          updatingDisabledStartButton(data);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
@@ -120,7 +120,6 @@ models.sequelize.sync({ force: false }).then(() => {
           sendDonutGraphInfo(data, client);
           clickedEndButton(data, client);
           updatingProgressBar(data);
-          updatingDisabledEndButton(data);
           break;
 
         case 'request-tasks-and-users':
@@ -136,7 +135,7 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          // updateNewsfeed(data);
+          updateNewsfeed(data);
           break;
 
         case 'server-state-store':
@@ -149,6 +148,10 @@ models.sequelize.sync({ force: false }).then(() => {
 
         case 'getProjectListforManager':
           getProjectListforManager(data.profile.email);
+          break;
+
+        case 'counter':
+          counter(data, client);
           break;
 
         default:
@@ -258,6 +261,7 @@ async function getTasksAndUsers(data, client) {
   client.send(JSON.stringify(message));
 }
 
+
 function show_object_methods(o) {
   /* loop through a sequelize object and display all available methods.*/
   for (let m in o) { console.log(m) };
@@ -352,6 +356,8 @@ async function eventCreation_newProject(data, client) {
     type: 'successful-event-creation'
   }
   client.send(JSON.stringify(message))
+  client.send(JSON.stringify({ type: 'update-progress-bar-with-new-field' }));
+
 }
 
 async function getTasks(data, client) {
@@ -457,14 +463,9 @@ const clickedEndButton = (data, client) => {
 }
 
 let progress_bar;
-let disabledEndButton = [];
 
 const updatingProgressBar = (data) => {
   progress_bar = data.progress_bar;
-}
-
-const updatingDisabledEndButton = (data) => {
-  disabledEndButton = data.disabledEndButton;
 }
 
 const setProgressBarState = (data, client) => {
@@ -476,24 +477,20 @@ const setProgressBarState = (data, client) => {
   client.send(JSON.stringify(message));
 }
 
-const setDisabledStartButtonState = (data, client) => {
-  let message = {
-    type: 'set-disabled-start-button-state',
-    disabledStartButton: disabledStartButton
-  }
-  console.log(message);
-  client.send(JSON.stringify(message));
-}
 
-const setDisabledEndButtonState = (data, client) => {
+let tracker = [];
+
+
+const counter = (data, client) => {
+  tracker.push(1);
   let message = {
-    type: 'set-disabled-end-button-state',
-    disabledEndButton: disabledEndButton
+    type: 'counter',
+    tracker: tracker
   }
-  console.log(message);
+  console.log('traaaaaaaaaaaaacker', tracker)
+
   client.send(JSON.stringify(message));
 
-
-  console.log(disabledEndButton)
-
 }
+
+console.log(progress_bar);
