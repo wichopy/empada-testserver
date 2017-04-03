@@ -278,7 +278,7 @@ const getProjectListforManager = (manager_email) => {
   });
 };
 
-async function eventCreation_newProject(data) {
+async function eventCreation_newProject(data, client) {
   /*
   Creates a new event following this flow:
   1. find event manager from logged in email.
