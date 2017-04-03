@@ -134,7 +134,7 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'getProjectListforManager':
-          getProjectListforManager(data.profile.email);
+          getProjectListforManager(data.email);
           break;
 
         default:
@@ -256,7 +256,7 @@ const getProjectListforManager = (manager_email) => {
       console.log(projects)
       let message = {
         type: 'update-project-list',
-        data: projects
+        projects: projects
       }
       client.send(JSON.stringify(message));
     })
