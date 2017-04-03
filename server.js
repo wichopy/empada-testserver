@@ -132,7 +132,7 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          // updateNewsfeed(data);
+          updateNewsfeed(data);
           break;
 
         case 'server-state-store':
@@ -144,7 +144,8 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'getProjectListforManager':
-          getProjectListforManager(data.email);
+        console.log(`profile email: ${data.email}`)
+          getProjectListforManager(data.email, client);
           break;
 
         default:
@@ -262,7 +263,7 @@ async function getTasksAndUsers(data, client) {
 //   for (let m in o) { console.log(m) };
 // }
 
-const getProjectListforManager = (manager_email) => {
+const getProjectListforManager = (manager_email, client) => {
   /* Returns list of all projects belonging to the passed in email. */
   return models.user.findOne({ where: { email: manager_email } }).then((manager) => {
     models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true }).then((projects) => {
