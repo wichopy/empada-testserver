@@ -112,7 +112,7 @@ module.exports = {
         {
           name: 'stuff',
           description: 'Acquire stuff.',
-          projectId: 1,
+          projectId: 2,
           assigned_start_time: new Date(5, 5, 5, 5),
           assigned_end_time: new Date(10, 10, 10, 10),
           start_time: undefined,
@@ -124,7 +124,7 @@ module.exports = {
         {
           name: 'stuff',
           description: 'Create stuff.',
-          projectId: 1,
+          projectId: 2,
           assigned_start_time: new Date(10, 10, 10, 10),
           assigned_end_time: new Date(18, 18, 18, 18),
           start_time: undefined,
