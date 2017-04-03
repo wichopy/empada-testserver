@@ -5,8 +5,10 @@ const WebSocket = require('ws');
 const models = require("./models");
 // Set the port to 4000
 const PORT = 3001;
-
-
+require('dotenv').config()
+const mailgun_api_key = process.env.api_key;
+const domain = process.env.domain;
+const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
 // let data = [
 //   ["Washington",
 //     new Date(1789, 4, 29),
@@ -53,22 +55,22 @@ const server = express()
 const wss = new SocketServer({ server });
 
 console.log('before sync');
+
 models.sequelize.sync({ force: false }).then(() => {
   console.log('after sync');
-
   clientConnected = () => {
-    models.task.findAll(//{
-    //   attributes: [
-    //     'name',
-    //     'start_time',
-    //     'end_time',
-    //     'assigned_start_time',
-    //     'assigned_end_time'
-    //   ]
-    //   // where: {
-    //   //   project_id: data.project_id,
-    //   // }
-      //}
+    models.task.findAll( //{
+        //   attributes: [
+        //     'name',
+        //     'start_time',
+        //     'end_time',
+        //     'assigned_start_time',
+        //     'assigned_end_time'
+        //   ]
+        //   // where: {
+        //   //   project_id: data.project_id,
+        //   // }
+        //}
       )
       .then((data) => {
         console.log("queried tasks from server when client connected");
@@ -94,7 +96,7 @@ models.sequelize.sync({ force: false }).then(() => {
     client.on('message', (data) => {
       data = JSON.parse(data)
         // wss.broadcast(event);
-      // debugger;
+        // debugger;
       switch (data.type) {
         case 'auth0-login':
           login(data)
@@ -141,6 +143,10 @@ models.sequelize.sync({ force: false }).then(() => {
           counter(data, client);
           break;
 
+        case 'getProjectListforManager':
+          getProjectListforManager(data.email);
+          break;
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
@@ -165,61 +171,54 @@ const login = (data, client) => {
 
 const updateNewsfeed = (data) => {
   models.task.findAll({
-  //   attributes: [
-  //     // 'user_id',
-  //     'name',
-  //     'start_time',
-  //     'end_time',
-  //     'assigned_start_time',
-  //     'assigned_end_time'
-  //   ]
-    // where: {
-    //   project_id: data.project_id,
-    // },
-    include: [models.user]
-  })
-  .then( (allTasks) => {
-    // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
-    wss.broadcast({ type: 'allTasks', data: allTasks });
-
-  })
+      //   attributes: [
+      //     // 'user_id',
+      //     'name',
+      //     'start_time',
+      //     'end_time',
+      //     'assigned_start_time',
+      //     'assigned_end_time'
+      //   ]
+      // where: {
+      //   project_id: data.project_id,
+      // },
+      include: [models.user]
+    })
+    .then((allTasks) => {
+      // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
+      wss.broadcast({ type: 'allTasks', data: allTasks });
+    })
 }
 
 const startTimeForContractorTasks = (data) => {
-  models.task.update(
-    {
+  models.task.update({
       start_time: data.start_time
-    },
-    {
-    where: {
-      id: data.id
+    }, {
+      where: {
+        id: data.id
       }
-    }
-  )
-  .then((res) => {
-    // console.log(res);
-  }).catch((err) => {
-    console.error(err);
-  })
+    })
+    .then((res) => {
+      // console.log(res);
+    }).catch((err) => {
+      console.error(err);
+    })
 }
 
 const endTimeForContractorTasks = (data) => {
   console.log('endTimeForContractorTasks');
-  models.task.update(
-    {
-     end_time: data.end_time
-    },
-    {
-    where: {
-      id: data.id
+  models.task.update({
+      end_time: data.end_time
+    }, {
+      where: {
+        id: data.id
       }
-    }
-  )
-  .then((res) => {
-    // console.log(res);
-  }).catch((err) => {
-    console.error(err);
-  })
+    })
+    .then((res) => {
+      // console.log(res);
+    }).catch((err) => {
+      console.error(err);
+    })
 }
 
 const sendDonutGraphInfo = (data, client) => {
@@ -233,30 +232,53 @@ const sendDonutGraphInfo = (data, client) => {
 async function getTasksAndUsers(data, client) {
   console.log('entered getTasksAndUsers');
   let tasks = await models.task.findAll()
-  .then((res) => {
-    return res;
-  }).catch((err) => {
-    console.error(err);
-  })
+    .then((res) => {
+      return res;
+    }).catch((err) => {
+      console.error(err);
+    })
 
   let users = await models.user.findAll()
-  .then((res) => {
-    return res;
-  }).catch((err) => {
-    console.error(err);
-  })
+    .then((res) => {
+      return res;
+    }).catch((err) => {
+      console.error(err);
+    })
 
   let message = {
-    type: "progress-bar-update",
-    tasks: tasks,
-    users: users
-  }
-
-  // console.log(message);
+      type: "progress-bar-update",
+      tasks: tasks,
+      users: users
+    }
+    // console.log(message);
   client.send(JSON.stringify(message));
 }
 
-async function eventCreation_newProject(data, client) {
+// <<<<<<< HEAD
+// async function eventCreation_newProject(data, client) {
+// =======
+// function show_object_methods(o) {
+//   /* loop through a sequelize object and display all available methods.*/
+//   for (let m in o) { console.log(m) };
+// }
+
+const getProjectListforManager = (manager_email) => {
+  /* Returns list of all projects belonging to the passed in email. */
+  return models.user.findOne({ where: { email: manager_email } }).then((manager) => {
+    models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true }).then((projects) => {
+      console.log(projects)
+      let message = {
+        type: 'update-project-list',
+        projects: projects
+      }
+      client.send(JSON.stringify(message));
+    })
+  }).catch((err) => {
+    console.error(err);
+  });
+};
+
+async function eventCreation_newProject(data) {
   /*
   Creates a new event following this flow:
   1. find event manager from logged in email.
@@ -267,9 +289,6 @@ async function eventCreation_newProject(data, client) {
   6. assign tasks the newly inserted user id's and project id.
   7. insert taks.
   */
-  function show_object_methods(o) {
-    for (let m in o) { console.log(m) };
-  }
 
   const manager_email = data.profile.email;
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
@@ -288,8 +307,8 @@ async function eventCreation_newProject(data, client) {
 
   const add_tasks = data.tasks.map((t) => {
     return {
-      assigned_start_time: new Date(new Date(`${data.startDate}T${t.assigned_start_time}`).getTime() + 4*60*60*1000),
-      assigned_end_time: new Date(new Date(`${data.startDate}T${t.assigned_end_time}`).getTime() + 4*60*60*1000),
+      assigned_start_time: new Date(new Date(`${data.startDate}T${t.assigned_start_time}`).getTime() + 4 * 60 * 60 * 1000),
+      assigned_end_time: new Date(new Date(`${data.startDate}T${t.assigned_end_time}`).getTime() + 4 * 60 * 60 * 1000),
       name: t.name,
       description: t.description,
       userId: t.user_id
@@ -334,9 +353,9 @@ async function eventCreation_newProject(data, client) {
 async function getTasks(data, client) {
   console.log('entered getTasks');
   let tasks = await models.task.findAll()
-  .then((res) => {
+    .then((res) => {
       return res;
-  })
+    })
 
   let message = {
     type: "update-list-of-tasks",
@@ -345,6 +364,68 @@ async function getTasks(data, client) {
 
   // console.log(message);
   client.send(JSON.stringify(message));
+}
+
+
+async function emailTasks(project_id) {
+  /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
+  // { where: { projectId: project_id } }
+  let project_details = await models.project.findOne({ where: { id: project_id }, raw: true }).then((data) => data);
+  console.log('found project');
+  let emails = await models.task.findAll({ where: { projectId: project_id } }).then((tasks) => {
+    // show_object_methods(projTasks[0])
+    const email_list = [];
+    tasks.forEach((t) => {
+        // show_object_methods(t)
+        email_list.push(t.getUser().then((u) => {
+          console.log('inside promise, finding email:');
+          console.log(u.toJSON().email);
+          return u.toJSON().email
+            // forEach((task) => {
+            //   task.getUser().then((res) => {
+            //     const current_Email = res.toJSON().email;
+            //   })
+        }))
+      }) // Promise.all(email_tasks).then((res) => res.forEach((t) => console.log(t.toJSON())))
+    return Promise.all(email_list).then((res) => {
+      return res
+    })
+  })
+
+  Array.prototype.contains = function (v) {
+    for (var i = 0; i < this.length; i++) {
+      if (this[i] === v) return true;
+    }
+    return false;
+  };
+
+  Array.prototype.unique = function () {
+    var arr = [];
+    for (var i = 0; i < this.length; i++) {
+      if (!arr.contains(this[i])) {
+        arr.push(this[i]);
+      }
+    }
+    return arr;
+  }
+  console.log(`Promise all finished, output: ${emails.unique()}`)
+  project_details = project_details;
+  emails = emails.unique()
+  console.log(project_details)
+  emails.forEach((user_email) => {
+    var data = {
+      from: 'Empada Server <noreply@empada.bz>',
+      to: user_email,
+      subject: `You were invited to ${project_details.name}`,
+      text: `You have been assigned to project: ${project_details.name}
+                Project description: ${project_details.description}
+                Hit this link to go to your task list: http://something.com`
+    };
+
+    mailgun.messages().send(data, function (error, body) {
+      console.log(body);
+    });
+  })
 }
 
 const clickedStartButton = (data, client) => {
@@ -365,7 +446,6 @@ const clickedEndButton = (data, client) => {
     type: "end-time-button-clicked",
     id: data.id
   }
-
   client.send(JSON.stringify(message));
 }
 
@@ -397,3 +477,4 @@ const counter = (data, client) => {
 }
 
 console.log(progress_bar); 
+
