@@ -133,6 +133,10 @@ models.sequelize.sync({ force: false }).then(() => {
           updateNewsfeed(data);
           break;
 
+        case 'getProjectListforManager':
+          getProjectListforManager(data.profile.email);
+          break;
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
@@ -241,8 +245,26 @@ async function getTasksAndUsers(data, client) {
 }
 
 function show_object_methods(o) {
+  /* loop through a sequelize object and display all available methods.*/
   for (let m in o) { console.log(m) };
 }
+
+const getProjectListforManager = (manager_email) => {
+  /* Returns list of all projects belonging to the passed in email. */
+  return models.user.findOne({ where: { email: manager_email } }).then((manager) => {
+    models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true }).then((projects) => {
+      console.log(projects)
+      let message = {
+        type: 'update-project-list',
+        data: projects
+      }
+      client.send(JSON.stringify(message));
+    })
+  }).catch((err) => {
+    console.error(err);
+  });
+};
+
 async function eventCreation_newProject(data) {
   /*
   Creates a new event following this flow:
