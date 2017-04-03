@@ -101,7 +101,7 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case "eventCreation-newProject":
-          eventCreation_newProject(data)
+          eventCreation_newProject(data, client);
           break;
 
         case 'start-time-for-contractor-tasks':
@@ -256,7 +256,7 @@ async function getTasksAndUsers(data, client) {
   client.send(JSON.stringify(message));
 }
 
-async function eventCreation_newProject(data) {
+async function eventCreation_newProject(data, client) {
   /*
   Creates a new event following this flow:
   1. find event manager from logged in email.
@@ -327,6 +327,8 @@ async function eventCreation_newProject(data) {
     return t;
   })
   let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
+
+  client.send(JSON.stringify({ type: 'update-progress-bar-with-new-field' }));
 }
 
 async function getTasks(data, client) {
@@ -394,3 +396,4 @@ const counter = (data, client) => {
   client.send(JSON.stringify(message));
 }
 
+console.log(progress_bar); 
