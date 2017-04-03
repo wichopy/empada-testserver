@@ -107,12 +107,16 @@ models.sequelize.sync({ force: false }).then(() => {
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           clickedStartButton(data, client);
+          updatingProgressBar(data);
+          updatingDisabledStartButton(data);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data, client);
           clickedEndButton(data, client);
+          updatingProgressBar(data);
+          updatingDisabledEndButton(data);
           break;
 
         case 'request-tasks-and-users':
@@ -128,8 +132,16 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          updateNewsfeed(data);
+          // updateNewsfeed(data);
           break;
+
+        case 'server-state-store':
+          setProgressBarState(data, client);
+          break;
+
+        case 'end-button-pressed':
+          // setDisabledEndButtonState(data, client);
+          break; 
 
         default:
           throw new Error("Unknown event type " + data.type)
@@ -356,3 +368,43 @@ const clickedEndButton = (data, client) => {
 
   client.send(JSON.stringify(message));
 }
+
+let progress_bar;
+let disabledEndButton = [];
+
+const updatingProgressBar = (data) => {
+  progress_bar = data.progress_bar;
+}
+
+const updatingDisabledEndButton = (data) => {
+  disabledEndButton = data.disabledEndButton;
+}
+
+const setProgressBarState = (data, client) => {
+  let message = {
+      type: 'set-progress-bar-state',
+      progress_bar: progress_bar
+    }
+  console.log(message);
+  client.send(JSON.stringify(message));
+}
+
+const setDisabledStartButtonState = (data, client) => {
+  let message = {
+      type: 'set-disabled-start-button-state',
+      disabledStartButton: disabledStartButton
+    }
+  console.log(message);
+  client.send(JSON.stringify(message));
+}
+
+const setDisabledEndButtonState = (data, client) => {
+  let message = {
+      type: 'set-disabled-end-button-state',
+      disabledEndButton: disabledEndButton
+    }
+  console.log(message);
+  client.send(JSON.stringify(message));
+}
+
+console.log(disabledEndButton)
