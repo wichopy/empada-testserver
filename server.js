@@ -108,7 +108,6 @@ models.sequelize.sync({ force: false }).then(() => {
           startTimeForContractorTasks(data);
           clickedStartButton(data, client);
           updatingProgressBar(data);
-          updatingDisabledStartButton(data);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
@@ -116,7 +115,6 @@ models.sequelize.sync({ force: false }).then(() => {
           sendDonutGraphInfo(data, client);
           clickedEndButton(data, client);
           updatingProgressBar(data);
-          updatingDisabledEndButton(data);
           break;
 
         case 'request-tasks-and-users':
@@ -139,9 +137,9 @@ models.sequelize.sync({ force: false }).then(() => {
           setProgressBarState(data, client);
           break;
 
-        case 'end-button-pressed':
-          // setDisabledEndButtonState(data, client);
-          break; 
+        case 'counter':
+          counter(data, client);
+          break;
 
         default:
           throw new Error("Unknown event type " + data.type)
@@ -370,14 +368,9 @@ const clickedEndButton = (data, client) => {
 }
 
 let progress_bar;
-let disabledEndButton = [];
 
 const updatingProgressBar = (data) => {
   progress_bar = data.progress_bar;
-}
-
-const updatingDisabledEndButton = (data) => {
-  disabledEndButton = data.disabledEndButton;
 }
 
 const setProgressBarState = (data, client) => {
@@ -389,22 +382,15 @@ const setProgressBarState = (data, client) => {
   client.send(JSON.stringify(message));
 }
 
-const setDisabledStartButtonState = (data, client) => {
+let tracker = [];
+
+const counter = (data, client) => {
+  tracker.push(1);
   let message = {
-      type: 'set-disabled-start-button-state',
-      disabledStartButton: disabledStartButton
-    }
-  console.log(message);
+    type: 'counter', 
+    tracker: tracker
+  }
+  console.log('traaaaaaaaaaaaacker', tracker)
   client.send(JSON.stringify(message));
 }
 
-const setDisabledEndButtonState = (data, client) => {
-  let message = {
-      type: 'set-disabled-end-button-state',
-      disabledEndButton: disabledEndButton
-    }
-  console.log(message);
-  client.send(JSON.stringify(message));
-}
-
-console.log(disabledEndButton)
