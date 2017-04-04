@@ -97,6 +97,7 @@ models.sequelize.sync({ force: false }).then(() => {
       data = JSON.parse(data)
         // wss.broadcast(event);
         // debugger;
+      console.log(data);
       switch (data.type) {
         case 'auth0-login':
           login(data)
@@ -139,13 +140,17 @@ models.sequelize.sync({ force: false }).then(() => {
           setProgressBarState(data, client);
           break;
 
-        case 'counter':
-          counter(data, client);
+        case 'end-button-pressed':
+          // setDisabledEndButtonState(data, client);
           break;
 
         case 'getProjectListforManager':
-        console.log(`profile email: ${data.email}`)
+          console.log(`profile email: ${data.email}`)
           getProjectListforManager(data.email, client);
+          break;
+
+        case 'counter':
+          counter(data, client);
           break;
 
         default:
@@ -255,13 +260,10 @@ async function getTasksAndUsers(data, client) {
   client.send(JSON.stringify(message));
 }
 
-// <<<<<<< HEAD
-// async function eventCreation_newProject(data, client) {
-// =======
-// function show_object_methods(o) {
-//   /* loop through a sequelize object and display all available methods.*/
-//   for (let m in o) { console.log(m) };
-// }
+function show_object_methods(o) {
+  /* loop through a sequelize object and display all available methods.*/
+  for (let m in o) { console.log(m) };
+}
 
 const getProjectListforManager = (manager_email, client) => {
   /* Returns list of all projects belonging to the passed in email. */
@@ -348,7 +350,12 @@ async function eventCreation_newProject(data, client) {
   })
   let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
 
+  let message = {
+    type: 'successful-event-creation'
+  }
+  client.send(JSON.stringify(message))
   client.send(JSON.stringify({ type: 'update-progress-bar-with-new-field' }));
+
 }
 
 async function getTasks(data, client) {
@@ -458,24 +465,27 @@ const updatingProgressBar = (data) => {
 
 const setProgressBarState = (data, client) => {
   let message = {
-      type: 'set-progress-bar-state',
-      progress_bar: progress_bar
-    }
+    type: 'set-progress-bar-state',
+    progress_bar: progress_bar
+  }
   console.log(message);
   client.send(JSON.stringify(message));
 }
 
+
 let tracker = [];
+
 
 const counter = (data, client) => {
   tracker.push(1);
   let message = {
-    type: 'counter', 
+    type: 'counter',
     tracker: tracker
   }
   console.log('traaaaaaaaaaaaacker', tracker)
+
   client.send(JSON.stringify(message));
+
 }
 
-console.log(progress_bar); 
-
+console.log(progress_bar);
