@@ -1,54 +1,20 @@
 const express = require('express');
 const SocketServer = require('ws').Server;
 const WebSocket = require('ws');
-// const sqlize = require('sequelize');
+
 const models = require("./models");
 // Set the port to 4000
-const PORT = 3001;
+const PORT = 3000;
 require('dotenv').config()
 const mailgun_api_key = process.env.api_key;
 const domain = process.env.domain;
 const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
-// let data = [
-//   ["Washington",
-//     new Date(1789, 4, 29),
-//     new Date(1797, 3, 3),
-//     new Date(1789, 4, 19),
-//     new Date(1797, 2, 27)
-//   ],
-//   ["Ammar",
-//     new Date(1798, 4, 19),
-//     new Date(1799, 3, 3),
-//     new Date(1798, 4, 29),
-//     new Date(1799, 3, 4)
-//   ],
-//   ["Adams",
-//     new Date(1797, 3, 3),
-//     new Date(1801, 3, 3),
-//     new Date(1802, 3, 3),
-//     new Date(1804, 3, 3)
-//   ]
-// ];
-
-// for (data_row of data) {
-//   models.task.create({
-//     name: data_row[0],
-//     start_time: data_row[1],
-//     end_time: data_row[2],
-//     assigned_start_time: data_row[3],
-//     assigned_end_time: data_row[4]
-//   })
-//   .then(() => {
-//     console.log("Seed is in the database.")
-//   });
-// };
-
 
 // Create a new express server
 const server = express()
   // Make the express server serve static assets (html, javascript, css) from the /public folder
   .use(express.static('public'))
-  .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
+  .listen(PORT, () => console.log(`Listening on ${ PORT }`));
 
 // Create the WebSockets server
 //**Need to do server: app to use express. */
@@ -138,10 +104,6 @@ models.sequelize.sync({ force: false }).then(() => {
 
         case 'server-state-store':
           setProgressBarState(data, client);
-          break;
-
-        case 'end-button-pressed':
-          // setDisabledEndButtonState(data, client);
           break;
 
         case 'getProjectListforManager':
