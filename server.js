@@ -53,7 +53,7 @@ const server = express()
 const wss = new SocketServer({ server });
 
 console.log('before sync');
-models.sequelize.sync({ force: false }).then(() => {
+models.sequelize.sync({ force: true }).then(() => {
   console.log('after sync');
 
   clientConnected = () => {
