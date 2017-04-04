@@ -108,14 +108,19 @@ models.sequelize.sync({ force: false }).then(() => {
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           clickedStartButton(data, client);
-          updatingProgressBar(data);
+          updatingProgressBar(data, client);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
           endTimeForContractorTasks(data);
           sendDonutGraphInfo(data, client);
           clickedEndButton(data, client);
-          updatingProgressBar(data);
+          updatingProgressBar(data, client);
+          break;
+
+        case 'update-progress-bar':
+          sendDonutGraphInfo(data, client);
+          // updatingProgressBar(data, client);
           break;
 
         case 'request-tasks-and-users':
@@ -131,21 +136,26 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'askingForNewsfeedUpdate':
-          updateNewsfeed(data);
+          // updateNewsfeed(data);
           break;
 
-        case 'server-state-store':
-          setProgressBarState(data, client);
-          break;
+        // case 'server-state-store':
+        //   setProgressBarState(data, client);
+        //   break;
 
-        case 'counter':
-          counter(data, client);
-          break;
+        // case 'counter':
+        //   counter(data, client);
+        //   break;
 
         case 'getProjectListforManager':
-        console.log(`profile email: ${data.email}`)
+          console.log(`profile email: ${data.email}`)
           getProjectListforManager(data.email, client);
           break;
+
+        // case 'fix-it':
+        //   updatingProgressBar(data, client);
+        //   setProgressBarState(data, client); 
+        //   break; 
 
         default:
           throw new Error("Unknown event type " + data.type)
@@ -171,23 +181,12 @@ const login = (data, client) => {
 
 const updateNewsfeed = (data) => {
   models.task.findAll({
-      //   attributes: [
-      //     // 'user_id',
-      //     'name',
-      //     'start_time',
-      //     'end_time',
-      //     'assigned_start_time',
-      //     'assigned_end_time'
-      //   ]
-      // where: {
-      //   project_id: data.project_id,
-      // },
-      include: [models.user]
-    })
-    .then((allTasks) => {
-      // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
-      wss.broadcast({ type: 'allTasks', data: allTasks });
-    })
+    include: [models.user]
+  })
+  .then((allTasks) => {
+    // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
+    wss.broadcast({ type: 'allTasks', data: allTasks });
+  })
 }
 
 const startTimeForContractorTasks = (data) => {
@@ -253,14 +252,6 @@ async function getTasksAndUsers(data, client) {
     // console.log(message);
   client.send(JSON.stringify(message));
 }
-
-// <<<<<<< HEAD
-// async function eventCreation_newProject(data, client) {
-// =======
-// function show_object_methods(o) {
-//   /* loop through a sequelize object and display all available methods.*/
-//   for (let m in o) { console.log(m) };
-// }
 
 const getProjectListforManager = (manager_email, client) => {
   /* Returns list of all projects belonging to the passed in email. */
@@ -366,7 +357,6 @@ async function getTasks(data, client) {
   client.send(JSON.stringify(message));
 }
 
-
 async function emailTasks(project_id) {
   /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
   // { where: { projectId: project_id } }
@@ -411,7 +401,7 @@ async function emailTasks(project_id) {
   console.log(`Promise all finished, output: ${emails.unique()}`)
   project_details = project_details;
   emails = emails.unique()
-  console.log(project_details)
+  // console.log(project_details)
   emails.forEach((user_email) => {
     var data = {
       from: 'Empada Server <noreply@empada.bz>',
@@ -451,30 +441,20 @@ const clickedEndButton = (data, client) => {
 
 let progress_bar;
 
-const updatingProgressBar = (data) => {
+const updatingProgressBar = (data, client) => {
   progress_bar = data.progress_bar;
+
+  client.send(JSON.stringify({ type: 'update-progress-bar', progress_bar: progress_bar }));
 }
 
-const setProgressBarState = (data, client) => {
-  let message = {
-      type: 'set-progress-bar-state',
-      progress_bar: progress_bar
-    }
-  console.log(message);
-  client.send(JSON.stringify(message));
-}
+// const setProgressBarState = (data, client) => {
+//   let message = {
+//       type: 'set-progress-bar-state',
+//       progress_bar: progress_bar
+//     }
+//   // console.log(message);
+//   client.send(JSON.stringify(message));
+// }
 
-let tracker = [];
-
-const counter = (data, client) => {
-  tracker.push(1);
-  let message = {
-    type: 'counter', 
-    tracker: tracker
-  }
-  console.log('traaaaaaaaaaaaacker', tracker)
-  client.send(JSON.stringify(message));
-}
-
-console.log(progress_bar); 
+console.log( 'progress_bar', progress_bar);
 

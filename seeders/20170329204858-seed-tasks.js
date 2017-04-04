@@ -23,7 +23,7 @@ module.exports = {
           end_time: undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
-          userId: 1
+          userId: 1,
         }, 
         {
           name: 'catering',
