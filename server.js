@@ -25,8 +25,6 @@ models.sequelize.sync({ force: false }).then(() => {
   clientConnected = () => {
     models.task.findAll()
       .then((data) => {
-        console.log("queried tasks from server when client connected");
-        // client.send(JSON.stringify({type: 'allTasks', data: data.data}));
         wss.broadcast({ type: 'allTasks', data: data });
       })
   }
@@ -45,9 +43,6 @@ models.sequelize.sync({ force: false }).then(() => {
     clientConnected();
     client.on('message', (data) => {
       data = JSON.parse(data)
-        // wss.broadcast(event);
-        // debugger;
-      console.log(data);
       switch (data.type) {
         case 'auth0-login':
           login(data);
@@ -87,7 +82,6 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'getProjectListforManager':
-          console.log(`profile email: ${data.email}`)
           getProjectListforManager(data.email, client);
           break;
 
@@ -224,10 +218,29 @@ async function eventCreation_newProject(data, client) {
     end_date: new Date(data.endDate),
     description: data.description,
   };
+  let alreadyRegisteredUsers = []
+  let add_users = []
+  let query_users = []
 
-  const add_users = await data.assigned_people.map((ap) => {
-    return { first_name: ap.name, email: ap.email }
+  data.assigned_people.forEach((ap) => {
+    query_users.push(models.user.findOne({
+      where: {
+        email: ap.email
+      },
+      individualHooks: true,
+      returning: true,
+    }).then((res) => {
+      if (res) {
+        alreadyRegisteredUsers.push(res)
+      } else {
+
+        add_users.push({ first_name: ap.name, email: ap.email });
+      }
+    }).catch((err) => {
+      client.send(JSON.stringify({ type: 'failed-event-creation' }))
+    }))
   });
+  await Promise.all(query_users)
 
   const add_tasks = data.tasks.map((t) => {
     return {
@@ -239,16 +252,21 @@ async function eventCreation_newProject(data, client) {
     };
   });
 
-  const [project, new_users] = await Promise.all([
+  let [project, new_users] = await Promise.all([
     models.project.create(add_project),
-    models.user.bulkCreate(add_users, { individualHooks: true, returning: true }),
+    models.user.bulkCreate(add_users, { individualHooks: true, returning: true }).catch((err) => {
+      client.send(JSON.stringify({ type: 'failed-event-creation' }))
+    }),
   ]);
+  alreadyRegisteredUsers.forEach((old_user) => new_users.push(old_user))
+    // new_users.concat(alreadyRegisteredUsers)
+
   //assign manager to project.
   await project.setUser(event_manager);
 
   //assign project to user.
   for (const user of new_users) {
-    user.addProject(project);
+    await user.addProject(project);
   }
 
   //map front end user id's to inserted user id's
@@ -269,12 +287,14 @@ async function eventCreation_newProject(data, client) {
     t.projectId = project.toJSON().id
     return t;
   })
-  let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true });
 
-  let message = {
-    type: 'successful-event-creation'
-  }
-  client.send(JSON.stringify(message))
+  let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true })
+    .then(() =>
+      client.send(JSON.stringify({ type: 'successful-event-creation' })))
+    .catch((err) => {
+      client.send(JSON.stringify({ type: 'failed-event-creation' }))
+    });
+
   client.send(JSON.stringify({ type: 'update-progress-bar-with-new-field' }));
   emailTasks(project.toJSON().id)
 }
@@ -282,13 +302,13 @@ async function eventCreation_newProject(data, client) {
 async function emailTasks(project_id) {
   /* Given a project ID generate a list of tasks for each assigned user's email and send using mailgun. */
   let project_details = await models.project.findOne({ where: { id: project_id }, raw: true }).then((data) => data);
-  console.log('found project');
+  // console.log('found project');
   let emails = await models.task.findAll({ where: { projectId: project_id } }).then((tasks) => {
     const email_list = [];
     tasks.forEach((t) => {
       email_list.push(t.getUser().then((u) => {
-        console.log('inside promise, finding email:');
-        console.log(u.toJSON().email);
+        // console.log('inside promise, finding email:');
+        // console.log(u.toJSON().email);
         return u.toJSON().email
       }))
     })
@@ -305,18 +325,18 @@ async function emailTasks(project_id) {
   };
 
   Array.prototype.unique = function () {
-    var arr = [];
-    for (var i = 0; i < this.length; i++) {
-      if (!arr.contains(this[i])) {
-        arr.push(this[i]);
+      var arr = [];
+      for (var i = 0; i < this.length; i++) {
+        if (!arr.contains(this[i])) {
+          arr.push(this[i]);
+        }
       }
+      return arr;
     }
-    return arr;
-  }
-  console.log(`Promise all finished, output: ${emails.unique()}`)
+    // console.log(`Promise all finished, output: ${emails.unique()}`)
   project_details = project_details;
   emails = emails.unique()
-  console.log(project_details)
+    // console.log(project_details)
   emails.forEach((user_email) => {
     var data = {
       from: 'Empada Server <noreply@empada.bz>',
@@ -328,13 +348,13 @@ async function emailTasks(project_id) {
     };
 
     mailgun.messages().send(data, function (error, body) {
-      console.log(body);
+      // console.log(body);
     });
   })
 }
 
 const clickedStartButton = (data, client) => {
-  console.log('clicked start button');
+  // console.log('clicked start button');
 
   const message = {
     type: "start-time-button-clicked",
@@ -345,7 +365,7 @@ const clickedStartButton = (data, client) => {
 }
 
 const clickedEndButton = (data, client) => {
-  console.log('clicked end button');
+  // console.log('clicked end button');
 
   const message = {
     type: "end-time-button-clicked",
@@ -362,9 +382,9 @@ const updatingProgressBar = (data) => {
 
 const setProgressBarState = (data, client) => {
   let message = {
-    type: 'set-progress-bar-state',
-    progress_bar: progress_bar
-  }
-  console.log(message);
+      type: 'set-progress-bar-state',
+      progress_bar: progress_bar
+    }
+    // console.log(message);
   client.send(JSON.stringify(message));
 }
