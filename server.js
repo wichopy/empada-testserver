@@ -104,8 +104,6 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case "eventCreation-newProject":
-          debugger;
-
           eventCreation_newProject(data, client);
           break;
 
@@ -147,7 +145,8 @@ models.sequelize.sync({ force: false }).then(() => {
           break;
 
         case 'getProjectListforManager':
-          getProjectListforManager(data.profile.email);
+          console.log(`profile email: ${data.email}`)
+          getProjectListforManager(data.email, client);
           break;
 
         case 'counter':
@@ -261,20 +260,19 @@ async function getTasksAndUsers(data, client) {
   client.send(JSON.stringify(message));
 }
 
-
 function show_object_methods(o) {
   /* loop through a sequelize object and display all available methods.*/
   for (let m in o) { console.log(m) };
 }
 
-const getProjectListforManager = (manager_email) => {
+const getProjectListforManager = (manager_email, client) => {
   /* Returns list of all projects belonging to the passed in email. */
   return models.user.findOne({ where: { email: manager_email } }).then((manager) => {
     models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true }).then((projects) => {
       console.log(projects)
       let message = {
         type: 'update-project-list',
-        data: projects
+        projects: projects
       }
       client.send(JSON.stringify(message));
     })
@@ -436,9 +434,7 @@ async function emailTasks(project_id) {
       console.log(body);
     });
   })
-
 }
-
 
 const clickedStartButton = (data, client) => {
   console.log('clicked start button');
@@ -458,7 +454,6 @@ const clickedEndButton = (data, client) => {
     type: "end-time-button-clicked",
     id: data.id
   }
-
   client.send(JSON.stringify(message));
 }
 
