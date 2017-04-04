@@ -59,19 +59,7 @@ console.log('before sync');
 models.sequelize.sync({ force: false }).then(() => {
   console.log('after sync');
   clientConnected = () => {
-    models.task.findAll( //{
-        //   attributes: [
-        //     'name',
-        //     'start_time',
-        //     'end_time',
-        //     'assigned_start_time',
-        //     'assigned_end_time'
-        //   ]
-        //   // where: {
-        //   //   project_id: data.project_id,
-        //   // }
-        //}
-      )
+    models.task.findAll()
       .then((data) => {
         console.log("queried tasks from server when client connected");
         // client.send(JSON.stringify({type: 'allTasks', data: data.data}));
@@ -166,7 +154,6 @@ models.sequelize.sync({ force: false }).then(() => {
       console.log('Client disconnected');
     });
   });
-
 });
 
 const login = (data, client) => {
@@ -220,7 +207,10 @@ const endTimeForContractorTasks = (data) => {
     })
 }
 
+let server_progress_bar;
+
 const sendDonutGraphInfo = (data, client) => {
+  server_progress_bar = data.progress_bar;
   let message = {
     type: 'update-progress-bar',
     progress_bar: data.progress_bar
@@ -269,7 +259,7 @@ const getProjectListforManager = (manager_email, client) => {
   });
 };
 
-async function eventCreation_newProject(data, client) {
+async function eventCreation_newProject(data) {
   /*
   Creates a new event following this flow:
   1. find event manager from logged in email.
@@ -281,6 +271,9 @@ async function eventCreation_newProject(data, client) {
   7. insert taks.
   */
 
+  function show_object_methods(o) {
+    for (let m in o) { console.log(m) };
+  }
   const manager_email = data.profile.email;
   const event_manager = await models.user.findOne({ where: { email: manager_email } });
   data = data.eventCreation;
@@ -324,9 +317,11 @@ async function eventCreation_newProject(data, client) {
     user_id_mapping[ou.email] = {};
     user_id_mapping[ou.email].old_id = ou.id;
   }
+
   for (const nu of new_users) {
     user_id_mapping[nu.toJSON().email].new_id = nu.toJSON().id;
   }
+
   let remapped_task_user_ids = add_tasks.map((t) => {
     for (const u in user_id_mapping) {
       if (user_id_mapping[u].old_id == t.userId) {
@@ -381,6 +376,7 @@ async function emailTasks(project_id) {
       return res
     })
   })
+}
 
   Array.prototype.contains = function (v) {
     for (var i = 0; i < this.length; i++) {
@@ -398,6 +394,7 @@ async function emailTasks(project_id) {
     }
     return arr;
   }
+
   console.log(`Promise all finished, output: ${emails.unique()}`)
   project_details = project_details;
   emails = emails.unique()
@@ -439,8 +436,6 @@ const clickedEndButton = (data, client) => {
   client.send(JSON.stringify(message));
 }
 
-let progress_bar;
-
 const updatingProgressBar = (data, client) => {
   progress_bar = data.progress_bar;
 
@@ -455,6 +450,3 @@ const updatingProgressBar = (data, client) => {
 //   // console.log(message);
 //   client.send(JSON.stringify(message));
 // }
-
-console.log( 'progress_bar', progress_bar);
-
