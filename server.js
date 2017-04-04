@@ -91,6 +91,15 @@ models.sequelize.sync({ force: false }).then(() => {
           getProjectListforManager(data.email, client);
           break;
 
+        case 'askingForUserTasks':
+          console.log('HELLO')
+          getUserTasks(data.email, client)
+          break;
+
+        case 'counter':
+          counter(data, client);
+          break;
+
         default:
           throw new Error("Unknown event type " + data.type)
       }
@@ -194,6 +203,23 @@ const getProjectListforManager = (manager_email, client) => {
       let message = {
         type: 'update-project-list',
         projects: projects
+      }
+      client.send(JSON.stringify(message));
+    })
+  }).catch((err) => {
+    console.error(err);
+  });
+};
+
+const getUserTasks = (email, client) => {
+  /* Returns list of all projects belonging to the passed in email. */
+  return models.user.findOne({ where: { email: email } }).then((user) => {
+    models.task.findAll({ where: { userId: +user.toJSON().id }, raw: true }).then((tasks) => {
+      console.log(tasks)
+      console.log('lul')
+      let message = {
+        type: 'task-list-for-user',
+        tasks: tasks
       }
       client.send(JSON.stringify(message));
     })
