@@ -52,7 +52,7 @@ module.exports = {
         {
           name: 'dj',
           description: 'Play music.',
-          projectId: 2,
+          projectId: 1,
           assigned_start_time: new Date(1, 1, 1, 1),
           assigned_end_time: new Date(4, 4, 4, 4),
           start_time: undefined,
