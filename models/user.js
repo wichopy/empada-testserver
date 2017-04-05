@@ -4,6 +4,7 @@ module.exports = function (sequelize, DataTypes) {
     first_name: DataTypes.STRING,
     last_name: DataTypes.STRING,
     email: DataTypes.STRING,
+    avatar: DataTypes.STRING,
   }, {
     classMethods: {
       associate: function (models) {
@@ -12,7 +13,6 @@ module.exports = function (sequelize, DataTypes) {
         user.hasMany(models.project)
         user.hasMany(models.task)
         user.belongsToMany(models.project, { through: "assigned_users" })
-
       }
     }
   });

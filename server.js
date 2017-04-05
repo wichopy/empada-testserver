@@ -20,7 +20,7 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: false }).then(() => {
+models.sequelize.sync({ force: true }).then(() => {
 
   clientConnected = () => {
     models.task.findAll()
@@ -367,10 +367,11 @@ async function emailTasks(project_id) {
     var data = {
       from: 'Empada Server <noreply@empada.bz>',
       to: user_email,
-      subject: `You were invited to ${project_details.name}`,
-      text: `You have been assigned to project: ${project_details.name}
-                Project description: ${project_details.description}
-                Hit this link to go to your task list: http://something.com`
+      subject: `You were invited to ${project_details.name}, an Empada project.`,
+      text: `You have been assigned to project code named: ${project_details.name}
+Project description: ${project_details.description}
+Hit this link to go to your task list: http://blooming-forest-29843.herokuapp.com/.
+Have fun! ^ _ ^`
     };
 
     mailgun.messages().send(data, function (error, body) {
