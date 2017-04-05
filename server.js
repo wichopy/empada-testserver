@@ -21,7 +21,6 @@ const server = express()
 const wss = new SocketServer({ server });
 
 models.sequelize.sync({ force: false }).then(() => {
-
   clientConnected = () => {
     models.task.findAll()
       .then((data) => {
