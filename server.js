@@ -20,7 +20,7 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: false }).then(() => {
+models.sequelize.sync({ force: true }).then(() => {
   clientConnected = () => {
     models.task.findAll()
       .then((data) => {
@@ -240,7 +240,6 @@ async function eventCreation_newProject(data, client) {
   const add_project = {
     name: data.name,
     start_date: new Date(data.startDate),
-    end_date: new Date(data.endDate),
     description: data.description,
   };
   let alreadyRegisteredUsers = []
