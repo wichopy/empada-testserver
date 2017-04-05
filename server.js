@@ -55,14 +55,11 @@ models.sequelize.sync({ force: true }).then(() => {
         case 'start-time-for-contractor-tasks':
           startTimeForContractorTasks(data);
           clickedStartButton(data, client);
-          updatingProgressBar(data);
           break;
 
         case 'end-time-for-contractor-tasks-and-updating-progress-bar':
-          endTimeForContractorTasks(data);
-          sendDonutGraphInfo(data, client);
+          endTimeForContractorTasks(data, client);
           clickedEndButton(data, client);
-          updatingProgressBar(data);
           break;
 
         case 'request-tasks-and-users':
@@ -90,8 +87,8 @@ models.sequelize.sync({ force: true }).then(() => {
           getUserTasks(data.email, client)
           break;
 
-        case 'counter':
-          counter(data, client);
+        case 'new-pb-state':
+          sendDonutGraphInfo(data, client);
           break;
 
         default:
@@ -111,7 +108,12 @@ const login = (data, client) => {
     if (count > 0) {
       console.log('user exists');
     } else {
-      models.user.create({ first_name: data.first_name, last_name: data.last_name, email: data.email })
+      models.user.create({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        avatar: data.picture
+      })
     }
   })
 }
@@ -141,13 +143,16 @@ const startTimeForContractorTasks = (data) => {
     })
 }
 
-const endTimeForContractorTasks = (data) => {
+const endTimeForContractorTasks = (data, client) => {
   models.task.update({
       end_time: data.end_time
     }, {
       where: {
         id: data.id
       }
+    })
+    .then((res) => {
+      sendDonutGraphInfo(data, client);
     })
     .catch((err) => {
       console.error(err);
