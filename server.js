@@ -246,7 +246,6 @@ async function eventCreation_newProject(data, client) {
   const add_project = {
     name: data.name,
     start_date: new Date(data.startDate),
-    end_date: new Date(data.endDate),
     description: data.description,
   };
   let alreadyRegisteredUsers = []
