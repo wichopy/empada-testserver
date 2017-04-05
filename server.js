@@ -20,7 +20,7 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: false }).then(() => {
+models.sequelize.sync({ force: true }).then(() => {
   clientConnected = () => {
     models.task.findAll()
       .then((data) => {
@@ -158,7 +158,7 @@ const sendDonutGraphInfo = (data, client) => {
     type: 'update-progress-bar',
     progress_bar: data.progress_bar
   }
-  client.send(JSON.stringify(message));
+  wss.broadcast(message);
 }
 
 async function getTasksAndUsers(data, client) {
@@ -386,7 +386,7 @@ const clickedStartButton = (data, client) => {
     id: data.id
   }
 
-  client.send(JSON.stringify(message));
+  wss.broadcast(message);
 }
 
 const clickedEndButton = (data, client) => {
@@ -396,7 +396,7 @@ const clickedEndButton = (data, client) => {
     type: "end-time-button-clicked",
     id: data.id
   }
-  client.send(JSON.stringify(message));
+  wss.broadcast(message);
 }
 
 let progress_bar;
@@ -405,11 +405,11 @@ const updatingProgressBar = (data) => {
   progress_bar = data.progress_bar;
 }
 
-const setProgressBarState = (data, client) => {
-  let message = {
-      type: 'set-progress-bar-state',
-      progress_bar: progress_bar
-    }
-    // console.log(message);
-  client.send(JSON.stringify(message));
-}
+// const setProgressBarState = (data, client) => {
+//   let message = {
+//       type: 'set-progress-bar-state',
+//       progress_bar: progress_bar
+//     }
+//     // console.log(message);
+//   wss.broadcast(message);
+// }
