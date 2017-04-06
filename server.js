@@ -8,7 +8,7 @@ require('dotenv').config()
 const mailgun_api_key = process.env.api_key;
 const domain = process.env.domain;
 const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
-
+const ProgressBarHelper = require('./ProgressBarHelper.js')
 
 // Create a new express server
 const server = express()
@@ -20,7 +20,8 @@ const server = express()
 //**Need to do server: app to use express. */
 const wss = new SocketServer({ server });
 
-models.sequelize.sync({ force: true }).then(() => {
+
+models.sequelize.sync({ force: false }).then(() => {
 
   clientConnected = () => {
     models.task.findAll()
@@ -63,7 +64,7 @@ models.sequelize.sync({ force: true }).then(() => {
           break;
 
         case 'request-tasks-and-users':
-          getTasksAndUsers(data, client);
+          sendDonutGraphInfo(data, client);
           break;
 
         case 'add-contractor-to-progress-bar':
@@ -120,7 +121,10 @@ const login = (data, client) => {
 
 const updateNewsfeed = (data) => {
   models.task.findAll({
-      include: [models.user]
+      include: [models.user],
+      where: {
+        projectId: data.projectId
+      }
     })
     .then((allTasks) => {
       // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
@@ -160,11 +164,19 @@ const endTimeForContractorTasks = (data, client) => {
 }
 
 const sendDonutGraphInfo = (data, client) => {
-  let message = {
-    type: 'update-progress-bar',
-    progress_bar: data.progress_bar
-  }
-  client.send(JSON.stringify(message));
+  models.task.findAll({ raw: true }).then((tasks) => {
+    models.user.findAll({ raw: true }).then((users) => {
+      users = users.map((u) => { return { id: u.id, name: u.first_name }; })
+      let progress_bar = ProgressBarHelper(tasks, users)
+
+      let message = {
+        type: 'update-progress-bar',
+        progress_bar: progress_bar
+      }
+      console.log(progress_bar)
+      wss.broadcast(message);
+    })
+  })
 }
 
 async function getTasksAndUsers(data, client) {
@@ -198,13 +210,14 @@ function show_object_methods(o) {
 const getProjectListforManager = (manager_email, client) => {
   /* Returns list of all projects belonging to the passed in email. */
   return models.user.findOne({ where: { email: manager_email } }).then((manager) => {
-    models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true }).then((projects) => {
-      let message = {
-        type: 'update-project-list',
-        projects: projects
-      }
-      client.send(JSON.stringify(message));
-    })
+    models.project.findAll({ where: { userId: +manager.toJSON().id }, raw: true })
+      .then((projects) => {
+        let message = {
+          type: 'update-project-list',
+          projects: projects
+        }
+        client.send(JSON.stringify(message));
+      })
   }).catch((err) => {
     console.error(err);
   });
@@ -246,6 +259,7 @@ async function eventCreation_newProject(data, client) {
   const add_project = {
     name: data.name,
     start_date: new Date(data.startDate),
+    end_date: new Date(),
     description: data.description,
   };
   let alreadyRegisteredUsers = []
@@ -278,10 +292,9 @@ async function eventCreation_newProject(data, client) {
       assigned_end_time: new Date(new Date(`${data.startDate}T${t.assigned_end_time}`).getTime() + 4 * 60 * 60 * 1000),
       name: t.name,
       description: t.description,
-      userId: t.user_id
+      userId: +t.user_id
     };
   });
-
   let [project, new_users] = await Promise.all([
     models.project.create(add_project),
     models.user.bulkCreate(add_users, { individualHooks: true, returning: true }).catch((err) => {
@@ -298,26 +311,25 @@ async function eventCreation_newProject(data, client) {
   for (const user of new_users) {
     await user.addProject(project);
   }
-
   //map front end user id's to inserted user id's
-  user_id_mapping = {};
+  let user_id_mapping = {};
   for (const ou of data.assigned_people) {
     user_id_mapping[ou.email] = {};
-    user_id_mapping[ou.email].old_id = ou.id;
+    user_id_mapping[ou.email].old_id = +ou.id;
   }
   for (const nu of new_users) {
-    user_id_mapping[nu.toJSON().email].new_id = nu.toJSON().id;
+    user_id_mapping[nu.toJSON().email].new_id = +nu.toJSON().id;
   }
   let remapped_task_user_ids = add_tasks.map((t) => {
     for (const u in user_id_mapping) {
-      if (user_id_mapping[u].old_id == t.userId) {
-        t.userId = user_id_mapping[u].new_id
+      if (user_id_mapping[u].old_id == +t.userId) {
+        t.userId = +user_id_mapping[u].new_id
+        break;
       }
     }
-    t.projectId = project.toJSON().id
+    t.projectId = +project.toJSON().id
     return t;
   })
-
   let new_tasks = await models.task.bulkCreate(remapped_task_user_ids, { individualHooks: true, returning: true })
     .then(() =>
       client.send(JSON.stringify({ type: 'successful-event-creation' })))
@@ -402,7 +414,7 @@ const clickedEndButton = (data, client) => {
     type: "end-time-button-clicked",
     id: data.id
   }
-  client.send(JSON.stringify(message));
+  wss.broadcast(message);
 }
 
 let progress_bar;
