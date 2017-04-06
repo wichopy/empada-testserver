@@ -26,6 +26,7 @@ models.sequelize.sync({ force: false }).then(() => {
   clientConnected = () => {
     models.task.findAll()
       .then((data) => {
+        console.log('All tasks')
         wss.broadcast({ type: 'allTasks', data: data });
       })
   }
@@ -33,7 +34,6 @@ models.sequelize.sync({ force: false }).then(() => {
   wss.broadcast = (data) => {
     wss.clients.forEach(function each(client) {
       if (client.readyState === client.OPEN) {
-        console.log("client connected!");
         client.send(JSON.stringify(data));
       }
     })
@@ -128,6 +128,7 @@ const updateNewsfeed = (data) => {
     })
     .then((allTasks) => {
       // client.send(JSON.stringify({type: 'allTasks', data: allTasks}));
+      console.log('updateNewsfeed')
       wss.broadcast({ type: 'allTasks', data: allTasks });
     })
 }
@@ -173,7 +174,7 @@ const sendDonutGraphInfo = (data, client) => {
         type: 'update-progress-bar',
         progress_bar: progress_bar
       }
-      console.log(progress_bar)
+      console.log('updatep rogress_bar')
       wss.broadcast(message);
     })
   })
@@ -404,7 +405,7 @@ const clickedStartButton = (data, client) => {
     id: data.id
   }
 
-  client.send(JSON.stringify(message));
+  wss.broadcast(message);
 }
 
 const clickedEndButton = (data, client) => {
@@ -414,6 +415,7 @@ const clickedEndButton = (data, client) => {
     type: "end-time-button-clicked",
     id: data.id
   }
+  console.log('end button clicked')
   wss.broadcast(message);
 }
 

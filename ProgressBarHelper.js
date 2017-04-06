@@ -1,5 +1,4 @@
 module.exports = dbToProgressBar = (Tasks, Users) => {
-  console.log(Users)
   Array.prototype.contains = function (v) {
     for (var i = 0; i < this.length; i++) {
       if (this[i] === v) return true;
@@ -31,23 +30,15 @@ module.exports = dbToProgressBar = (Tasks, Users) => {
       });
     });
   });
-  console.log('===================================')
-  console.log('all the unique project and user ids')
-  console.log(output)
-  console.log('===================================')
   output.forEach((upid) => {
     let ProjectUserTasks = Tasks.filter((t) => {
         return +t.projectId === +upid.projectId && +t.userId === +upid.userId
       })
-      // console.log(ProjectUserTasks)
-      // console.log(upid)
     Users.forEach((u) => {
         if (u.id === upid.userId) {
           upid.name = u.name
         }
       })
-      // upid.name = Users[upid.userId]
-      // console.log(Users[upid.userId])
     ProjectUserTasks.forEach((task) => {
         // console.log(upid)
         // console.log(task)
@@ -70,13 +61,9 @@ module.exports = dbToProgressBar = (Tasks, Users) => {
           upid.total_tasks = 1
         }
       })
-      // console.log(upid)
     let upidDivisions = 100 / upid.total_tasks;
-    // console.log(upidDivisions);
     upid.completed_tasks *= upidDivisions
     upid.incomplete_tasks *= upidDivisions
   })
-
-  console.log(output)
   return output.filter((pb) => pb.completed_tasks || pb.incomplete_tasks || pb.total_tasks);
 }
