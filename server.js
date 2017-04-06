@@ -8,7 +8,7 @@ require('dotenv').config()
 const mailgun_api_key = process.env.api_key;
 const domain = process.env.domain;
 const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
-
+const ProgressBarHelper = require('./ProgressBarHelper.js')
 
 // Create a new express server
 const server = express()
@@ -154,11 +154,19 @@ const endTimeForContractorTasks = (data, client) => {
 }
 
 const sendDonutGraphInfo = (data, client) => {
-  let message = {
-    type: 'update-progress-bar',
-    progress_bar: data.progress_bar
-  }
-  client.send(JSON.stringify(message));
+  models.task.findAll({ raw: true }).then((tasks) => {
+    models.user.findAll({ raw: true }).then((users) => {
+      users = users.map((u) => { return { id: u.id, name: u.first_name }; })
+      let progress_bar = ProgressBarHelper(tasks, users)
+
+      let message = {
+        type: 'update-progress-bar',
+        progress_bar: progress_bar
+      }
+      console.log(progress_bar)
+      wss.broadcast(message);
+    })
+  })
 }
 
 async function getTasksAndUsers(data, client) {
