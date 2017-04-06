@@ -161,6 +161,48 @@ const sendDonutGraphInfo = (data, client) => {
   wss.broadcast(message);
 }
 
+// async function getTasksAndUsers(data, client) {
+//   let tasks = await models.task.findAll()
+//     .then((res) => {
+//       models.progresses.update({
+//         userId: tasks.userId,
+//         projectId: tasks.projectId,
+//         incomplete_tasks: tasks.incomplete_tasks,
+//         completed_tasks: tasks.incomplete_tasks,
+//         total_tasks: tasks.total_tasks
+//       }, {
+//         where: {
+//           userId: tasks.userId, 
+//           projectId: tasks.projectId
+//         }
+//       })
+//       .then((res) => {
+//         models.user.findAll()
+//       }).then((res) => models.progresses.update({
+//         name: users.first_name, 
+//       }, {
+//         where: {
+//           id: tasks.userId,
+//         }
+//       }))
+//     }).catch((err) => {
+//       console.error(err);
+//     })
+
+//   let message = {
+//     type: "progress-bar-update",
+//     tasks: tasks,
+//     users: users
+//   }
+//   console.log('sequel query', message)
+//   client.send(JSON.stringify(message));
+// }
+
+function show_object_methods(o) {
+  /* loop through a sequelize object and display all available methods.*/
+  for (let m in o) { console.log(m) };
+}
+
 async function getTasksAndUsers(data, client) {
   let tasks = await models.task.findAll()
     .then((res) => {
@@ -172,6 +214,37 @@ async function getTasksAndUsers(data, client) {
   let users = await models.user.findAll()
     .then((res) => {
       return res;
+    }).catch((err) => {
+      console.error(err);
+    })
+
+  let pTask = await models.progresses.update({
+      userId: tasks.userId, 
+      projectId: tasks.projectId,
+      incomplete_tasks: tasks.incomplete_tasks,
+      completed_tasks: tasks.incomplete_tasks,
+      total_tasks: tasks.total_tasks
+    }, {
+      where: {
+        userId: tasks.userId, 
+        projectId: tasks.projectId
+      }
+    })
+    .then((res) => {
+      return res; 
+    }).catch((err) => {
+      console.error(err);
+    })
+
+    let pUsers = await models.progresses.update({
+      name: users.first_name, 
+    }, {
+      where: {
+        id: tasks.userId,
+      }
+    })
+    .then((res) => {
+      return res; 
     }).catch((err) => {
       console.error(err);
     })
