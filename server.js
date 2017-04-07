@@ -38,6 +38,7 @@ wss.on('connection', (client) => {
         console.log("stuck it in the database.")
         wss.broadcast(event);
       });
+
     //insert into messeages
   });
 
