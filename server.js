@@ -5,10 +5,6 @@ const models = require("./models");
 const PORT = 3001;
 
 require('dotenv').config()
-  // const mailgun_api_key = process.env.api_key;
-  // const domain = process.env.domain;
-  // const mailgun = require('mailgun-js')({ apiKey: mailgun_api_key, domain: domain });
-
 const eventCreation_newProject = require('./EventCreationHelper.js')
 const ProgressBarHelper = require('./ProgressBarHelper.js')
 
@@ -262,17 +258,17 @@ const clickedEndButton = (data, client) => {
   wss.broadcast(message);
 }
 
-let progress_bar;
+// let progress_bar;
 
-const updatingProgressBar = (data) => {
-  progress_bar = data.progress_bar;
-}
+// const updatingProgressBar = (data) => {
+//   progress_bar = data.progress_bar;
+// }
 
-const setProgressBarState = (data, client) => {
-  let message = {
-      type: 'set-progress-bar-state',
-      progress_bar: progress_bar
-    }
-    // console.log(message);
-  client.send(JSON.stringify(message));
-}
+// const setProgressBarState = (data, client) => {
+//   let message = {
+//       type: 'set-progress-bar-state',
+//       progress_bar: progress_bar
+//     }
+//     // console.log(message);
+//   client.send(JSON.stringify(message));
+// }
